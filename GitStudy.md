@@ -107,12 +107,16 @@ git stash pop
 
 ### 4.2  克隆
 - 克隆下载远程项目 git clone
-
 ```
+git clone  https://github.com/qichunlin/java.git
 
-``` 
+后面是你的远程地址
+```
+![](https://img2018.cnblogs.com/blog/1231979/201904/1231979-20190417132635254-1022544714.png)
+
 
 ### 4.3 代码同步
+>如果有人在GitHub上面修改过原来的代码则需要先同步最新的源码,直接新的文件的话会报错
 ![](https://img2018.cnblogs.com/blog/1231979/201904/1231979-20190417132110637-1976542364.png)
 
 ![](https://img2018.cnblogs.com/blog/1231979/201904/1231979-20190417132008810-443965804.png)
