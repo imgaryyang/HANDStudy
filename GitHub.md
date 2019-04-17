@@ -393,7 +393,7 @@ git push
 ****
 
 ## 11.Github配置远程仓库
-###10.1 创建SSH Key
+### 11.1 创建SSH Key
 ```
 在用户主目录下，看看有没有.ssh目录，如果有，再看看这个目录下有没有id_rsa和 id_rsa.pub  这两个文件,如果有的话，直接跳过此如下命令，如果没有的话，打开命令行，输入如下命令：
    ssh-keygen -t rsa –C “youremail@example.com”
@@ -405,12 +405,12 @@ id_rsa是私钥，不能泄露出去，id_rsa.pub是公钥，可以放心地告诉任何人。
 >第一种写法是错误的加了空格,第二种才是对的。  注意：输入完成之后，一定要回车三次！！！！！！
 
 
-### 11.1 vim 打开文件复制内容
+### 11.2 vim 打开文件复制内容
 `ssh -keygen`
 ![](https://img2018.cnblogs.com/blog/1231979/201903/1231979-20190305174830784-1109992776.png)
 
 
-### 11.2提交Github
+### 11.3提交Github
 ```
    登录github,打开” settings”中的SSH Keys页面，然后点击“Add SSH Key”,填上任意title，在Key文本框里黏贴id_rsa.pub文件的内容。
 ```
@@ -418,12 +418,12 @@ id_rsa是私钥，不能泄露出去，id_rsa.pub是公钥，可以放心地告诉任何人。
 
 ![](https://img2018.cnblogs.com/blog/1231979/201903/1231979-20190305174953431-95143107.png)
 
-### 11.3 获取Github上的地址，在本地Git输入
+### 11.4 获取Github上的地址，在本地Git输入
 ```
 git remote add origin https://github.com/qichunlin/test.git
 ```
 
-### 11.4推送
+### 11.5推送
 ```
 git push -u orgin master
 
@@ -434,7 +434,7 @@ git push -u orgin master
 ```
 
 
-### 11.5测试
+### 11.6测试
 ![](https://img2018.cnblogs.com/blog/1231979/201903/1231979-20190305183512745-1255568170.png)
 
 
