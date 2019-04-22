@@ -93,3 +93,18 @@ AND hiii.INVENTORY_ITEM_ID = hool.INVENTORY_ITEM_ID
 		line.header_id = hooh.header_id
 )
 ```
+
+
+
+## 第四天--->2019.4.22
+```
+修改两个页面,基本修改结束,页面定型
+
+完成代码维护,中英文切换正常
+
+测试好查询订单汇总页面,数据加载成功
+
+完成Excel导出,过滤条件后的导出也能使用
+
+修复金额无法加载不显示的bug
+```
