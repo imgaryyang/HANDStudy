@@ -108,3 +108,13 @@ AND hiii.INVENTORY_ITEM_ID = hool.INVENTORY_ITEM_ID
 
 修复金额无法加载不显示的bug
 ```
+
+
+## 第五天--->2019.4.23
+```
+完成保存头行信息录入
+
+修改页面之间的跳转逻辑
+
+修复昨天的bug(sql)
+```
