@@ -118,3 +118,14 @@ AND hiii.INVENTORY_ITEM_ID = hool.INVENTORY_ITEM_ID
 
 修复昨天的bug(sql)
 ```
+
+
+
+## 第六天--->2019.4.24
+```
+完成excel导出
+
+修改删除头行信息方法
+
+权限添加操作 代码维护
+```
