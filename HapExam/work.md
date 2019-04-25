@@ -129,3 +129,13 @@ AND hiii.INVENTORY_ITEM_ID = hool.INVENTORY_ITEM_ID
 
 权限添加操作 代码维护
 ```
+
+
+## 第七天--->2019.4.25
+```
+完成pdf导出 (还存在乱码问题)
+
+页面要求的细节优化
+
+测试功能
+```
