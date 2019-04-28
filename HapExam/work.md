@@ -139,3 +139,13 @@ AND hiii.INVENTORY_ITEM_ID = hool.INVENTORY_ITEM_ID
 
 测试功能
 ```
+
+## 第八天--->2019.4.26
+```
+完成PDF导出乱码解决---重写字体
+
+优化页面需求
+
+kendo-ui 导出PDF乱码解决,参考
+https://blog.csdn.net/qq_41038231/article/details/86323997
+```
