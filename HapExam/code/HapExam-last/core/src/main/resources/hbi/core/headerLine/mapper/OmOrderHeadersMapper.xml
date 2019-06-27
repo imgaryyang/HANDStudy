@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="hbi.core.headerLine.mapper.OmOrderHeadersMapper">
+    <resultMap id="BaseResultMap" type="hbi.core.headerLine.dto.OmOrderHeaders">
+        <result column="HEADER_ID" property="headerId" jdbcType="DECIMAL" />
+        <result column="ORDER_NUMBER" property="orderNumber" jdbcType="VARCHAR" />
+        <result column="COMPANY_ID" property="companyId" jdbcType="DECIMAL" />
+        <result column="ORDER_DATE" property="orderDate" jdbcType="DATE" />
+        <result column="ORDER_STATUS" property="orderStatus" jdbcType="VARCHAR" />
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="DECIMAL" />
+    </resultMap>
+
+
+    <!--查询订单头信息  订单汇总-->
+    <select id="selectOrderHeader" resultMap="BaseResultMap" parameterType="hbi.core.headerLine.dto.OmOrderHeaders">
+        SELECT
+          hooh.order_number as orderNumber,/*销售订单号*/
+          hooh.header_id as headerId, /*销售订单头ID*/
+          hooh.order_date as orderDate,/*订单日期*/
+          hooh.order_status as orderStatus,/*订单状态*/
+
+          hac.customer_name as customerName,/*客户名称*/
+          hac.customer_id as customerId,/*客户ID*/
+
+          hoc.company_name as companyName,/*公司名称*/
+          hoc.company_id as companyId,/*公司ID*/
+
+          /*订单金额:计算处理相同的公司的总金额*/
+            (select
+              sum(ORDERD_QUANTITY * unit_selling_price)
+            from hap_om_order_lines line where header_id = hooh.header_id) as total
+
+        from
+          hap_org_companys hoc,
+          hap_om_order_headers hooh,
+          hap_ar_customers hac
+        where
+          hoc.company_id = hac.company_id
+          and hooh.customer_id = hac.customer_id
+
+        <if test="companyId !=null">
+            and hooh.company_id = #{companyId,jdbcType=DECIMAL}
+        </if>
+
+        <if test="customerId !=null">
+            and hooh.customer_id = #{customerId,jdbcType=DECIMAL}
+        </if>
+
+        <if test="orderNumber !=null">
+            and hooh.order_number = #{orderNumber,jdbcType=VARCHAR}
+        </if>
+        <if test="orderStatus !=null">
+            and hooh.order_status = #{orderStatus,jdbcType=VARCHAR}
+        </if>
+
+        <if test="headerId !=null">
+            and hooh.header_id = #{headerId,jdbcType=DECIMAL}
+        </if>
+        <if test="inventoryItemId !=null">
+            and hooh.header_id in
+            (select hool.header_id from hap_om_order_lines hool where hool.inventoryItemId = #{inventoryItemId,jdbcType=DECIMAL})
+        </if>
+    </select>
+
+
+
+    <!--整单删除 连表-->
+    <delete id="deleteOrderHeaderAndLines" parameterType="hbi.core.headerLine.dto.OmOrderHeaders">
+        delete
+        hap_om_order_headers,
+        hap_om_order_lines
+        from
+	    hap_om_order_headers
+        left join hap_om_order_lines
+        on
+        hap_om_order_headers.HEADER_ID = hap_om_order_lines.HEADER_ID
+        where
+	      hap_om_order_headers.HEADER_ID = #{headerId}
+
+    </delete>
+
+    <!--导出Excel-->
+    <select id="exportExcel" resultMap="BaseResultMap" parameterType="hbi.core.headerLine.dto.OmOrderHeaders">
+        select
+        distinct(header.ORDER_NUMBER),
+        com.COMPANY_NAME,
+        cust.CUSTOMER_NAME,
+        header.ORDER_DATE,
+        header.ORDER_STATUS,
+        item.ITEM_CODE,
+        item.ITEM_DESCRIPTION,
+        line.ORDERD_QUANTITY,
+        line.UNIT_SELLING_PRICE,
+        (select
+             sum(ORDERD_QUANTITY * unit_selling_price)
+         from hap_om_order_lines line where header_id = header.header_id) as total
+        from
+        hap_om_order_headers header,
+        hap_org_companys com,
+        hap_ar_customers cust,
+        hap_inv_inventory_items item,
+        hap_om_order_lines line
+
+        where
+        com.company_id = cust.company_id
+        and header.customer_id = cust.customer_id
+        and line.inventory_item_id = item.inventory_item_id
+        and line.header_id = header.header_id
+    </select>
+
+</mapper>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="hbi.core.sales.mapper.SalesOrderMapper">
+
+
+    <!--<resultMap id="salesOrder" type="hbi.core.sales.dto.SalesOrder">
+        <association property="orgCompanys" javaType="hbi.core.companys.dto.OrgCompanys" >
+            <result column="COMPANY_ID" property="companyId" jdbcType="DECIMAL" />
+            <result column="COMPANY_NUMBER" property="companyNumber" jdbcType="VARCHAR" />
+            <result column="COMPANY_NAME" property="companyName" jdbcType="VARCHAR" />
+            <result column="ENABLED_FLAG" property="enabledFlag" jdbcType="VARCHAR" />
+        </association>
+
+        <association property= "arCustomers" javaType="hbi.core.customers.dto.ArCustomers" >
+            <result column="CUSTOMER_ID" property="customerId" jdbcType="DECIMAL" />
+            <result column="CUSTOMER_NUMBER" property="customerNumber" jdbcType="VARCHAR" />
+            <result column="CUSTOMER_NAME" property="customerName" jdbcType="VARCHAR" />
+            <result column="COMPANY_ID" property="companyId" jdbcType="DECIMAL" />
+            <result column="ENABLED_FLAG" property="enabledFlag" jdbcType="VARCHAR" />
+        </association>
+
+        <association property="invInventoryItems" javaType="hbi.core.inventoryItems.dto.InvInventoryItems" >
+            <result column="INVENTORY_ITEM_ID" property="inventoryItemId" jdbcType="DECIMAL" />
+            <result column="ITEM_CODE" property="itemCode" jdbcType="VARCHAR" />
+            <result column="ITEM_UOM" property="itemUom" jdbcType="VARCHAR" />
+            <result column="ITEM_DESCRIPTION" property="itemDescription" jdbcType="VARCHAR" />
+            <result column="ORDER_FLAG" property="orderFlag" jdbcType="VARCHAR" />
+            <result column="START_ACTIVE_DATE" property="startActiveDate" jdbcType="DATE" />
+            <result column="END_ACTIVE_DATE" property="endActiveDate" jdbcType="DATE" />
+            <result column="ENABLED_FLAG" property="enabledFlag" jdbcType="VARCHAR" />
+        </association>
+
+        <association property="omOrderHeaders" javaType="hbi.core.headerLine.dto.OmOrderHeaders" >
+            <result column="HEADER_ID" property="headerId" jdbcType="DECIMAL" />
+            <result column="ORDER_NUMBER" property="orderNumber" jdbcType="VARCHAR" />
+            <result column="COMPANY_ID" property="companyId" jdbcType="DECIMAL" />
+            <result column="ORDER_DATE" property="orderDate" jdbcType="DATE" />
+            <result column="ORDER_STATUS" property="orderStatus" jdbcType="VARCHAR" />
+            <result column="CUSTOMER_ID" property="customerId" jdbcType="DECIMAL" />
+        </association>
+
+        <association property="omOrderLines" javaType="hbi.core.headerLine.dto.OmOrderLines" >
+            <result column="LINE_ID" property="lineId" jdbcType="DECIMAL" />
+            <result column="HEADER_ID" property="headerId" jdbcType="DECIMAL" />
+            <result column="LINE_NUMBER" property="lineNumber" jdbcType="DECIMAL" />
+            <result column="INVENTORY_ITEM_ID" property="inventoryItemId" jdbcType="DECIMAL" />
+            <result column="ORDERD_QUANTITY" property="orderdQuantity" jdbcType="DECIMAL" />
+            <result column="ORDER_QUANTITY_UOM" property="orderQuantityUom" jdbcType="VARCHAR" />
+            <result column="UNIT_SELLING_PRICE" property="unitSellingPrice" jdbcType="DECIMAL" />
+            <result column="DESCRIPTION" property="description" jdbcType="VARCHAR" />
+            <result column="COMPANY_ID" property="companyId" jdbcType="DECIMAL" />
+            <result column="ADDITION1" property="addition1" jdbcType="VARCHAR" />
+            <result column="ADDITION2" property="addition2" jdbcType="VARCHAR" />
+            <result column="ADDITION3" property="addition3" jdbcType="VARCHAR" />
+            <result column="ADDITION4" property="addition4" jdbcType="VARCHAR" />
+            <result column="ADDITION5" property="addition5" jdbcType="VARCHAR" />
+        </association>
+    </resultMap>-->
+
+
+    <!--查询订单汇总   映射对象-->
+    <!--<select id="selectSalesOrder" parameterType="hbi.core.sales.dto.SalesOrder" resultMap="salesOrder">
+        SELECT
+            hooh.order_number,
+            hoc.company_name,
+            hac.customer_name,
+            hooh.order_date,
+            hooh.order_status,
+            hool.ORDERD_QUANTITY * hool.unit_selling_price
+        FROM
+            hap_org_companys hoc,
+            hap_om_order_headers hooh,
+            hap_ar_customers hac,
+            hap_om_order_lines hool,
+            hap_inv_inventory_items hiii
+        WHERE
+            hoc.company_id = hac.company_id
+            AND hooh.customer_id = hac.customer_id
+            AND hool.header_id = hooh.header_id
+            AND hiii.INVENTORY_ITEM_ID = hool.INVENTORY_ITEM_ID
+
+
+        <if test="companyId !=null">
+            AND hoc.company_id=#{companyId,jdbcType=DECIMAL}
+        </if>
+        <if test="customerId !=null">
+            AND hac.cusomer_id=#{customerId,jdbcType=DECIMAL}
+        </if>
+        <if test="orderStatus !=null">
+            AND hooh.order_status=#{orderStatus,jdbcType=VARCHAR}
+        </if>
+
+        <if test="inventoryItemId !=null">
+            AND hiii.INVENTORY_ITEM_ID=#{inventoryItemId,jdbcType=DECIMAL}
+        </if>
+    </select>-->
+
+
+    <!--直接映射属性-->
+    <select id="selectSalesOrder" parameterType="hbi.core.sales.dto.SalesOrder" resultType="hbi.core.sales.dto.SalesOrder">
+        select
+        hooh.HEADER_ID headerId,
+        hooh.ORDER_NUMBER orderNumber,
+        hoc.COMPANY_NAME companyName,
+        hac.CUSTOMER_NAME customerName,
+        hooh.ORDER_DATE orderDate,
+        hooh.ORDER_STATUS orderStatus,
+        hool.UNIT_SELLING_PRICE*line.ORDERD_QUANTITY price
+        from
+        hap_om_order_headers hooh,
+        hap_om_order_lines hool,
+        hap_ar_customers hac,
+        hap_org_companys hoc,
+        hap_inv_inventory_items hiii
+        where
+        head.COMPANY_ID = hoc.COMPANY_ID
+        and hooh.CUSTOMER_ID = hac.CUSTOMER_ID
+        and hool.HEADER_ID = hooh.HEADER_ID
+        and hool.INVENTORY_ITEM_ID = hiii.INVENTORY_ITEM_ID
+
+        <if test="companyId!=null">
+            AND hoc.company_id = #{companyId}
+        </if>
+        <if test="customerId!=null">
+            AND hac.customer_id = #{customerId}
+        </if>
+        <if test="orderNumber!=null">
+            AND hooh.order_number = #{orderNumber}
+        </if>
+        <if test="inventoryItemId!=null">
+            AND hiii.inventory_item_id = #{inventoryItemId}
+        </if>
+        <if test="orderStatus!=null">
+            AND hooh.order_status = #{orderStatus}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="hbi.core.customers.mapper.ArCustomersMapper">
+    <resultMap id="BaseResultMap" type="hbi.core.customers.dto.ArCustomers">
+        <result column="CUSTOMER_ID" property="customerId" jdbcType="DECIMAL" />
+        <result column="CUSTOMER_NUMBER" property="customerNumber" jdbcType="VARCHAR" />
+        <result column="CUSTOMER_NAME" property="customerName" jdbcType="VARCHAR" />
+        <result column="COMPANY_ID" property="companyId" jdbcType="DECIMAL" />
+        <result column="ENABLED_FLAG" property="enabledFlag" jdbcType="VARCHAR" />
+    </resultMap>
+
+
+    <!--模糊查询对应的客户信息-->
+    <select id="queryFuzzy" parameterType="hbi.core.customers.dto.ArCustomers" resultMap="BaseResultMap">
+        select
+          CUSTOMER_ID as customerId,
+          CUSTOMER_NUMBER as customerNumber,
+          CUSTOMER_NAME as customerName,
+          COMPANY_ID as companyId,
+          ENABLED_FLAG as enabledFlag
+        from hap_ar_customers
+        /*where CUSTOMER_ID = #{companyId,jdbcType=DECIMAL}*/
+        <where>
+            <if test="companyId != null">
+                and COMPANY_ID like concat(concat('%',UPPER(#{companyId,jdbcType=DEMICAL})),'%')
+            </if>
+
+            <if test="customerNumber != null">
+                and CUSTOMER_NUMBER like concat(concat('%',UPPER(#{customerNumber,jdbcType=VARCHAR})),'%')
+            </if>
+
+            <if test="CUSTOMER_NAME != null">
+                and CUSTOMER_NAME like concat(concat('%',UPPER(#{customerName,jdbcType=VARCHAR})),'%')
+            </if>
+        </where>
+    </select>
+
+
+    <!--根据指定公司ID获取对应的客户  指定到Lov的sql页面-->
+    <!--<select id="selectCustomer" resultType="BaseResultMap" parameterType="java.lang.Integer">
+        select
+        hac.customer_id,
+        hac.customer_number,
+        hac.customer_name
+        from
+        hap_ar_customers hac
+        where hac.company_id = #{companyId,jdbcType=DECIMAL}
+    </select>-->
+
+</mapper>

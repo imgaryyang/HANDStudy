@@ -1,0 +1,418 @@
+<#include "../include/header.html">
+
+<!--引入下拉列表的数据源-->
+<script src="${base.contextPath}/common/code?orderStatusObj=HAP_OM_ORDER_STATUS" type="text/javascript"></script>
+
+<script type="text/javascript">
+    var viewModel = Hap.createGridViewModel("#grid",{
+
+        //新建按钮
+        newOrderDetail:function(){
+            $(location).attr('href', 'order_details.html');
+        },
+
+
+        //导出Excel
+        exportExcelCustom: function () {
+            jQuery(
+                '<form action="' + "${base.contextPath}/hap/om/order/headers/exportOrderExcel" + '" method="' + ('get') + '">' +
+                '<input type="text" name="customerId" value="' + (viewModel.model.customerId||"") + '"/>' +
+                '<input type="text" name="companyId" value="' + (viewModel.model.companyId||"") + '"/>' +
+                '<input type="text" name="orderNumber" value="' + (viewModel.model.orderNumber||null) + '"/>' +
+                '<input type="text" name="inventoryItemId" value="' + (viewModel.model.inventoryItemId||"") + '"/>' +
+                '<input type="text" name="orderStatus" value="' + (viewModel.model.orderStatus||null) + '"/>' +
+                '</form>')
+                .appendTo('body').submit().remove();
+        },
+
+
+        /*自定义Excel导出方式---> 当前页面*/
+        /*exportExcelCustom: function() {
+            //导出配置对象
+            var exportConfig = {};
+
+            //grid的列
+            var columns = [];
+
+            var index = 0;
+            var grid = $("#grid").data("kendoGrid"); //获取kendoGrid对象
+            console.log(grid.columns[0]);
+
+            for (var i = 0; i < grid.columns.length; i++) { //遍历所有字段
+                if (grid.columns[i].field != null) {
+                    var columnInfo = {};
+                    columnInfo["name"] = grid.columns[i].field; //获取字段name
+                    columnInfo["title"] = grid.columns[i].title; //获取字段实际显示标题
+                    columnInfo["width"] = grid.columns[i].width; //获取字段显示宽度
+                    var align = $('tbody').find('tr')[0].getElementsByTagName('td')
+                        [i].style.textAlign; //获取对齐方式
+                    if (align != null || align != '') {
+                        columnInfo["align"] = align;
+                    }
+                    if (dataSource.options.schema.model.fields[grid.columns[i].field] != null) {//获取字段类型
+                        columnInfo["type"] =
+                            dataSource.options.schema.model.fields[grid.columns[i].field].type;
+                        console.log("获取的数据类型："+dataSource.options.schema.model.fields[grid.columns[i].field].type)
+                    }
+                    columns[index] = columnInfo; //将数据导入columns中
+
+                    console.log("插入的数据："+columnInfo)
+                    index++;
+                }
+            }
+
+            for (var i = 0; i < 4; i++) { //遍历所有字段
+                var titels = ["物料编码","物料描述","数量","销售单价"];
+                var columnInfo = {};
+                columnInfo["name"] = grid.columns[i].field; //获取字段name
+                columnInfo["title"] = grid.columns[i].title; //获取字段实际显示标题
+                columnInfo["width"] = grid.columns[i].width; //获取字段显示宽度
+
+                var align = $('tbody').find('tr')[0].getElementsByTagName('td')
+                    [i].style.textAlign; //获取对齐方式
+                if (align != null || align != '') {
+                    columnInfo["align"] = align;
+                }
+                if (dataSource.options.schema.model.fields[grid.columns[i].field] != null) {//获取字段类型
+                    columnInfo["type"] =
+                        dataSource.options.schema.model.fields[grid.columns[i].field].type;
+                }
+                columns.push({column:titels[i]});
+                columns[index] = columnInfo; //将数据导入columns中
+
+                console.log("插入的数据："+columnInfo)
+                index++;
+
+            }
+
+            exportConfig["columnsInfo"] = columns; //将columns数据导⼊入exportConfig中
+            exportConfig["param"] = Hap.prepareQueryParameter(this.model.toJSON()); //获取网页限制条件
+            exportConfig["fileName"] = "SalesOrder"; //设置⽂文件名
+            var $inputImg = $('<input>').attr({name: "config", value:
+                    kendo.stringify(exportConfig)}); //将⻚页⾯面信息传到$inputImg中，定义input，并设置name和value属性
+
+            var $inputToken=$('<input>').attr({name:"${_csrf.parameterName}",value:"${_csrf.token}",
+                    type:"hidden"}); //传⼊入token，以实现跨域访问，定义input
+
+            var $form = $("<form>"); //定义form
+
+            $form.attr({ //设置form的target，method，action属性
+                target: '_self',
+                method: 'post',
+
+                //设置请求地址
+                action: '${base.contextPath}/export/excel/custom'
+            }).append($inputImg); //在form中添加$inputImg，添加input域
+
+            $form.append($inputToken); //在form中添加$inputToken
+            $form.id='smbForm'; //设置form的id
+            $("#batchDiv").empty().append($form); //在batchDiv中添加该form
+            $($form).submit(); //提交form
+            $("#batchDiv").empty(); //置空batchDiv
+        },*/
+    });
+</script>
+<body>
+
+
+<!--销售订单汇总页面-->
+
+<!--LOV选择部分-->
+<div class="container">
+    <!--第一行信息开始-->
+    <div class="row" id="query-lov" style="margin-top: 30px">
+        <!--公司名称-->
+        <div class="col-md-4">
+            <label><@spring.message "orgcompanys.companyname"/></label>
+            <input id="company_name" data-value-primitive="true" data-bind="value:model.companyId" />
+        </div>
+
+        <!--客户名称-->
+        <div class="col-md-4">
+            <label><@spring.message "arcustomers.customername"/></label>
+            <input id="customer_name" data-value-primitive="true" data-bind="value: model.customerId" />
+        </div>
+
+        <!--销售订单号-->
+        <div class="col-md-4">
+            <label><@spring.message "omorderheaders.ordernumber"/></label>
+            <input id="order_number" data-value-primitive="true" data-bind="value: model.orderNumber" />
+        </div>
+
+        <script>
+            /*加载公司名称信息LOV*/
+            $("#company_name").kendoLov($.extend(${lovProvider.getLov(base.contextPath, base.locale, "HAP_ORG_COMPANYS")},{
+                select:function(e){
+                    viewModel.model.set('companyName', e.item.companyName);
+                    viewModel.model.set('customerName', "");
+                },
+                change:function () {
+                    viewModel.model.set('customerName', "");
+                }
+            }));
+
+
+            //加载客户名称LOV
+            $("#customer_name").kendoLov($.extend(${lovProvider.getLov(base.contextPath, base.locale, "HAP_AR_CUSTOMERS")},{
+                query:function(e){
+                    e.param['companyId'] = $("#company_name").val();//传入限制参数
+                    /*alert(e.param['companyId'])
+                    alert(typeof (e.param['companyId']))
+                    if (e.param['companyId'] == null){
+                        alert(e.param['companyId']);
+                        code= "HAP_AR_CUSTOMERS"
+                    } else{
+                        e.param['companyId'] = $("#company_name").val();
+                        code = "HAP_AR_CUSTOMERS2"
+                    }*/
+                },
+                select:function(e){
+                    viewModel.model.set('customerName', e.item.customerName);
+                },
+                change:function () {
+
+                }
+            }));
+
+            kendo.bind($("#query-lov"),viewModel);
+        </script>
+    </div>
+
+    <!--第二行信息开始-->
+    <div id="secondRow" class="row" style="margin-top: 20px">
+        <div class="col-md-4">
+            <label style="margin-left: 30px">物料</label>
+            <input id="item_desc" data-value-primitive="true" data-bind="value: inventoryItemId" />
+        </div>
+
+        <!--订单状态-->
+        <div class="col-md-4">
+            <label style="margin-left: 1px"><@spring.message "omorderheaders.orderstatus"/></label>
+            <input id="order_status" data-value-primitive="true" data-bind="value:model.orderStatus" />
+        </div>
+
+        <script>
+            $("#item_desc").kendoLov($.extend(${lovProvider.getLov(base.contextPath, base.locale, "HAP_INV_INVENTORY_ITEMS")},{
+                select:function(e){
+                    viewModel.model.set('itemDescpiption', e.item.itemDescpiption);
+                },
+            }));
+
+            //订单状态下拉列表实现
+            $("#order_status").kendoComboBox({
+                //index: 0,
+                dataTextField: "meaning",
+                dataValueField: "value",
+                filter: "contains",
+                dataSource: orderStatusObj,
+            });
+            //console.log(orderStatusObj);
+
+            kendo.bind($("#item_desc"),viewModel);
+            kendo.bind($("#order_status"),viewModel);
+            kendo.bind($("#secondRow"),viewModel);
+        </script>
+
+    </div>
+</div>
+
+
+
+<!--Grid部分-->
+<div id="page-content">
+    <div class="pull-left" id="toolbar-btn" style="padding-bottom:20px;margin: 15px 30px 0px 20px">
+        <span class="btn btn-default k-grid-add" style="float:left;margin-right:10px;" data-bind="click:query"><@spring.message "hap.query"/></span>
+        <span data-bind="click:reset" class="btn btn-default" style="float:left;margin-right:10px;"><@spring.message "hap.reset"/></span>
+
+        <!--导出大数据量的excel-->
+        <span class="btn btn-default" style="float:left;margin-right:10px;" data-bind="click:exportExcelCustom"><i class="fa fa-file-excel-o" style="margin-right:3px;"></i><@spring.message "导出Excel(大数据量)"/></span>
+    </div>
+    <script>kendo.bind($('#toolbar-btn'), viewModel);</script>
+
+
+    <!--数据表格部分-->
+    <div style="clear:both">
+        <div id="grid">
+            <!--新建按钮-->
+            <div style="margin: 10px 10px 10px 10px" id="newDe">
+                <span class="btn btn-default" data-bind="click:newOrderDetail"><@spring.message "hap.new"/></span>
+            </div>
+            <script>kendo.bind($('#newDe'), viewModel);</script>
+        </div>
+
+        <!--导出按钮需要的html标签-->
+        <div id="batchDiv"></div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    Hap.initEnterQuery('#toolbar-btn', viewModel.query);
+    var BaseUrl = _basePath;
+    dataSource = new kendo.data.DataSource({
+        transport: {
+            read: {
+                //查询所有
+                url: BaseUrl + "/hap/om/order/headers/query",
+                type: "POST",
+                dataType: "json"
+            },
+            update: {
+                url: BaseUrl + "/hap/om/order/headers/submit",
+                type: "POST",
+                contentType: "application/json"
+            },
+            destroy: {
+                url: BaseUrl + "/hap/om/order/headers/remove",
+                type: "POST",
+                contentType: "application/json"
+            },
+            create: {
+                url: BaseUrl + "/hap/om/order/headers/submit",
+                type: "POST",
+                contentType: "application/json"
+            },
+            parameterMap: function (options, type) {
+                if (type !== "read" && options.models) {
+                    var datas = Hap.prepareSubmitParameter(options, type)
+                    return kendo.stringify(datas);
+                } else if (type === "read") {
+                    return Hap.prepareQueryParameter(viewModel.model.toJSON(), options)
+                }
+            }
+        },
+        batch: true,
+        serverPaging: true,
+        pageSize: 10,
+        schema: {
+            data: 'rows',
+            total: 'total',
+            model: {
+                id:"headerId",
+                fields: {}
+            }
+        }
+    });
+
+    var grid = $("#grid").kendoGrid({
+        dataSource: dataSource,
+        resizable: true,
+        scrollable: true,
+        navigatable: false,
+        selectable: 'multiple, rowbox',
+        dataBound: function () {
+            if (parent.autoResizeIframe) {
+                parent.autoResizeIframe('${RequestParameters.functionCode!}')
+            }
+        },
+        pageable: {
+            pageSizes: [5, 10, 20, 50],
+            refresh: true,
+            buttonCount: 5
+        },
+
+        //显示列部分
+        columns: [
+            {
+                //销售订单号
+                field: "orderNumber",
+                title: '<@spring.message "omorderheaders.ordernumber"/>',
+                width: 120,
+                attributes: {style: "text-align:center"},
+                headerAttributes: {
+                    "class": "table-header-cell",
+                    style  : "text-align: center"
+                },
+
+                //打开新的Tab页面
+                template : function(rowdata){
+                    //console.log("rowdata"+rowdata)
+                    return '<a style="text-decoration : underline;color :blue;cursor:pointer" ' +
+                        'onclick="toOrderDeatil(\''+rowdata.headerId+'\''+',\''+rowdata.orderNumber+'\')">'+ rowdata.orderNumber+ '</a>'
+                }
+            },
+            {
+                //公司名称
+                field: "companyId",
+                title: '<@spring.message "orgcompanys.companyname"/>',
+                width: 120,
+                attributes: {style: "text-align:center"},
+                headerAttributes: {
+                    "class": "table-header-cell",
+                    style  : "text-align: center"
+                },
+                template:function (rowdata) {
+                    return rowdata.companyName;
+                }
+            },
+            {
+                //客户名称
+                field: "customerName",
+                title: '<@spring.message "arcustomers.customername"/>',
+                width: 120,
+                attributes: {style: "text-align:center"},
+                headerAttributes: {
+                    "class": "table-header-cell",
+                    style  : "text-align: center"
+                }
+            },
+            {
+                //订单日期
+                field: "orderDate",
+                title: '<@spring.message "omorderheaders.orderdate"/>',
+                width: 120,
+                attributes: {style: "text-align:center"},
+                headerAttributes: {
+                    "class": "table-header-cell",
+                    style  : "text-align: center"
+                },
+                format: "{0:yyyy-MM-dd}"
+            },
+            {
+                //订单状态
+                field: "orderStatus",
+                title: '<@spring.message "omorderheaders.orderstatus"/>',
+                width: 120,
+                attributes: {style: "text-align:center"},
+                headerAttributes: {
+                    "class": "table-header-cell",
+                    style  : "text-align: center"
+                },
+                template: function (dataItem) {
+                    var v = dataItem.orderStatus;
+                    //订单状态orderStatusObj,下拉列表
+                    $.each(orderStatusObj, function (i, n) {
+                        //查出来select * from hap_dex.sys_code_value_b  里面有个meaning字段
+                        if ((n.value || '').toLowerCase() == (v || '').toLowerCase()) {
+                            v = n.meaning;
+                            return false;
+                        }
+                    });
+                    return v;
+                },
+            },
+            {
+                //订单金额
+                field: "total",
+                title: '<@spring.message "omorderlines.orderamount"/>',
+                width: 120,
+                attributes: {style: "text-align:center"},
+                headerAttributes: {
+                    "class": "table-header-cell",
+                    style  : "text-align: center"
+                }
+            },
+        ],
+        //不可编辑
+        editable: false
+    });
+
+
+    //跳转到订单详情Tab页面
+    function toOrderDeatil(headerId,orderNumber){
+        //parent.openTab("set_"+id,name,'sales/order_details.html?isedit=1?myId='+id+'');
+        $(location).attr('href', 'order_details.html?headerId='+headerId);
+    }
+
+</script>
+</body>
+</html>
