@@ -837,13 +837,291 @@ hzero:
 ```
 
 ##### 并发登录控制
-可在安全策略下配置WEB端或移动端 是否允许同一个用户在多处登录，移动端和WEB端互不影响。当不允许用户多出登录时
-****
-****
-***
-****
-****
-****
+可在安全策略下配置WEB端或移动端 是否允许同一个用户在多处登录，移动端和WEB端互不影响。当不允许用户多处登录时，用户在一处登录，自动失效其他的access_token。允许多处登录时，一个用户可同时在多处登录，由于access_token不一样，也互不影响
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011133634441-1148101391.png)
+
+##### 其他配置
+- 手机登录可配置发送验证码的模板，以及修改密码发送验证码的模板。
+- 退出时若不清理token，那么下次登录时返回的access_token跟之前的登录的一样。若清理Token，每次登陆都会创建新的access_token。
+```
+hzero:
+  send-message:
+    # 手机登录发送验证码模板代码
+    mobile-login: HOTH.MOBILE_LOGIN
+    # 修改密码发送验证码模板代码
+    modify-login-password: HOTH.MODIFY_PASSWORD
+  oauth:
+    logout:
+      # 退出时是否清理token
+      clear-token: ${HZERO_OAUTH_LOGOUT_CLEAR_TOKEN:true}
+```
+
+##### 刷新access_token
+前端通过判断access_token 过期时间，自动调用 `/oauth/token`端点刷新access_token
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011140726977-1830475415.jpg)
+
+```
+grant_type:授权类型，固定为 refresh_token
+refresh_token:获取access_token是返回的refresh_token
+client_id:客户端名称
+client_secret:客户端秘钥
+```
+
+##### 冻结下线用户
+子账户冻结用户后，会使用户下线。oauth服务提供两个接口，可删除access_token，使用户下线
+
+- 根据clientId和登录名下线
+	- URI：【DELETE】/admin/token/{clientId}
+	- 参数：clientId-客户端ID；loginNameList-用户登录名集合
+
+- 根据登录名下线
+	- URI：【DELETE】/admin/token
+	- 参数：loginNameList-用户登录名集合
+
+##### 授权码获取用户信息
+授权码标准模式是通过授权码换取access_token，通过【GET】/oauth/user 接口可通过授权码直接返回用户信息，请求参数跟授权码标准模式一致。
+
+##### OAuth配置
+```
+hzero:
+  captcha:
+    # 是否启用验证码
+    enable: true
+  send-message:
+    # 手机登录发送验证码模板代码
+    mobile-login: HOTH.MOBILE_LOGIN
+    # 修改密码发送验证码模板代码
+    modify-login-password: HOTH.MODIFY_PASSWORD
+  oauth:
+    # 认证服务器 自定义资源匹配器
+    custom-resource-matcher: ${HZERO_OAUTH_CUSTOM_RESOURCE_MATCHER:false}
+    # 验证 client 时不检查 client 的一致性
+    not-check-client-equals: ${HZERO_OAUTH_NOT_CHECK_CLIENT_EQUALS:false}
+    # 移动设备ID参数
+    device-id-parameter: ${HZERO_OAUTH_DEVICE_ID_PARAMETER:device_id}
+    # 登录设备来源参数
+    source-type-parameter: ${HZERO_OAUTH_SOURCE_TYPE_PARAMETER:source_type}
+    # 始终开启图形验证码校验，默认否
+    enable-always-captcha: ${HZERO_OAUTH_ENABLE_ALWAYS_CAPTCHA:false}
+    # 标题
+    title: ${HZERO_OAUTH_TITLE:HZERO}
+    login:
+      # 允许使用的登录名，默认有 用户名、邮箱、手机号
+      support-fields: ${HZERO_OAUTH_LOGIN_SUPPORT_FIELDS:username,email,phone}
+      # 手机登录参数
+      mobile-parameter: phone
+      # 前端默认模板
+      default-template: ${HZERO_OAUTH_LOGIN_DEFAULT_TEMPLATE:main}
+      # 默认登录成功跳转地址
+      success-url: ${HZERO_OAUTH_LOGIN_SUCCESS_URL:http://hzeronf.saas.hand-china.com/workplace}
+    logout:
+      # 退出时是否清理token
+      clear-token: ${HZERO_OAUTH_LOGOUT_CLEAR_TOKEN:true}
+```
+
+#### OAuth Token API
+##### OAuth密码模式
+- API：【POST】 /oauth/oauth/token
+- 场景：需要用户登录：通过`【用户名+密码】`获取token
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011145433565-752253943.png)
+
+##### OAuth客户端模式
+- API：POST  /oauth/oauth/token
+- 场景：无需用户登录，只获取Token，一般用于外部系统接口调用
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011151249005-1361022728.png)
+
+##### 标准登录接口
+- API：POST /oauth/oauth/token
+- 场景：仿Web端登录，需要用户登录，且需要用户输入验证码
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011151356101-1192854008.png)
+
+- 请求参数
+```
+参数				说明							必输
+grant_type  	授权类型，固定password		Y
+client_id   	客户端ID						Y						
+client_secret  	客户端密钥					Y
+username		登录账号：可以使用 登录账号/手机号/邮箱 进行认证				Y
+password		登录密码：使用 RSA 加密后传输	Y
+source_type		设备来源，web-Web端/app-移动设备端	Y
+device_id	设备ID，可以使用UUID，用于设置 Token 的唯一性	Y
+user_type	用户类型：P-平台用户/C-C端用户，默认 P	N
+login_field	登录字段，控制只能使用某个字段登录，username/phone/email，默认三个字段都支持	N
+captcha	用户输入的验证码	N
+captchaKey	生成验证码返回的 captchaKey	N
+
+```
+
+**获取初始化参数**
+- API：GET /oauth/login/init-params?channel={channel}&client_id={clientId}
+- 场景：进入登录页面时，调用该接口获取一些初始化信息
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011152009020-423881010.png)
+
+- 请求参数
+```
+参数			说明
+channel		登录渠道，查询对应渠道的三方登录方式
+clientId	客户端ID，用于查询客户端所属租户
+username	用户登录失败时可以传入用户名，用于查询用户所属租户
+```
+
+- 响应参数
+```
+参数				说明
+openLoginWays	三方登录方式
+isNeedCaptcha	是否需要输入图形验证码
+```
+
+**生成验证码**
+- API：GET /oauth/public/captcha-code
+- 场景：如果 isNeedCaptcha = true，首先调用该接口获取验证码的 Key
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011154414186-51467699.png)
+
+
+**获取图形验证码**
+- API：GET /oauth/public/captcha/{captchaKey}
+- 场景：通过上一步得到 captchaKey 后，再调用该接口获取验证码图片
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011154539009-462202665.png)
+
+##### 手机短信登录
+**登录接口**
+- API：POST /oauth/token/mobile
+- 场景：通过 `手机+短信验证码` 登录，需要用户输入手机验证码
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011162810130-1895115648.png)
+
+- 请求参数
+```
+参数				说明							必输
+grant_type		授权类型，固定 implicit		Y
+client_id		客户端ID						Y
+client_secret	客户端密钥					Y
+phone			手机号						Y
+source_type	设备来源，web-Web端/app-移动设备端	Y
+device_id	设备ID，可以使用UUID，用于设置 Token 的唯一性	Y
+user_type	用户类型：P-平台用户/C-C端用户，默认 P	N
+captcha			用户输入的手机验证码			Y
+captchaKey		发送手机验证码返回的captchaKey	Y
+```
+
+**获取手机验证码**
+- API：/oauth/public/send-phone-captcha
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011163631150-1692997045.png)
+
+##### 接口返回说明
+**请求失败**
+可通过 `success=false` 判断接口是否调用失败，如果调用失败，返回失败编码 `code` 及消息 `message`。
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011163751020-1250049556.png)
+
+**请求成功**
+请求成功则返回 `access_token`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011163846540-770966151.png)
+
+**接口返回码**
+```
+返回编码							说明
+hoth.warn.usernameNotFound	您输入的登录账户不存在
+hoth.warn.phoneNotFound	您输入的手机号未注册
+hoth.warn.userNotActive	您的账号未激活，无法登录
+hoth.warn.accountLocked	您的账户已锁定，请通过找回密码解锁，或联系平台运维中心
+hoth.warn.accountExpire	您的账户已过期，无法登录
+hoth.warn.tenantInvalid	您的所属组织无效，请联系管理员
+hoth.warn.tenantDisabled	您的所属组织已被禁用，请联系管理员
+hoth.warn.passwordError	您的密码错误，还可以尝试{0}次
+hoth.warn.usernameNotFoundOrPasswordIsWrong	您输入的账号或密码错误
+hoth.warn.loginErrorMaxTimes	密码错误次数超过限制，您的账户已锁定！请通过找回密码解锁，或联系平台运维中心！
+hoth.warn.ldapIsDisable	LDAP已被禁用
+hoth.warn.captchaNull	请输入验证码
+hoth.warn.captchaWrong	您输入的验证码有误
+hoth.warn.phoneNotCheck	您的手机未验证，可使用邮箱或账号登录
+hoth.warn.emailNotCheck	您的邮箱未验证，可使用手机或账号登录
+hoth.warn.phoneAndEmailNotCheck	您的手机和邮箱均未验证，可使用账号登录
+hoth.warn.defaultTenantRoleNull	您的默认租户下没有分配角色，请联系管理员分配角色
+hoth.warn.loginMobileCaptchaNull	请输入手机验证码
+hoth.warn.validCaptchaFirst	请先验证手机/邮箱
+hoth.warn.accountNotEquals	您的账号与验证的账号不一致
+hoth.warn.captcha.sendPhoneCaptchaError	发送手机验证码失败，请稍后重试
+hoth.warn.phoneOrEmailNotnull	请输入手机/邮箱
+hoth.warn.phoneOrEmailNotFound	您输入的手机/邮箱不存在
+hoth.warn.phoneOrEmailNotInvalid	您输入的手机/邮箱格式不正确
+hoth.user.phone.not-register	手机未注册，请先注册后再登录
+hoth.warn.captchaNotnull	请输入验证码
+hoth.warn.ldapCannotChangePassword	LDAP用户不能进行修改密码操作
+hoth.warn.roleNone	您没有任何角色，请联系管理员分配角色
+hoth.warn.decodePasswordError	解码密码错误，请用Base64加密后传输
+hoth.warn.createClientError	创建Token错误
+```
+
+#### 多域名单点登录 
+- 概述
+```
+用于集成外部CAS，OAUTH2，SAML等协议的单点登录，访问配置好的二级域名，自动跳转到对应单点登录页进行认证。
+```
+
+- 单点登录启用配置：
+```
+hzero:
+  ### SSO配置 ###
+  oauth:
+    sso:
+      # 是否启用二级域名单点登录
+      enabled: true
+      # oauth服务基础地址，用于单点登录回调
+      service: 
+        baseUrl: http://dev.hzero.org:8080/oauth
+```
+
+- 多域名单点登录效果：
+`1.在系统管理-》域名配置中，创建单点登录配置`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011184936674-128042574.png)
+
+`2.浏览器打开配置的域名 http://cas.hzero.org ,自动跳转到单点登录页面，并附带回调地址`
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011185827832-855360612.png)
+
+`3.单点登录页登录成功后，跳转回 http://cas.hzero.org`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011185900923-70165678.png)
+
+
+##### Cas 单点登录集成
+- Cas单点登录流程
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011185946670-361916235.png)
+
+- Cas单点登录配置如下：
+	- 1.单点域名：平台域名的代理地址；
+	- 2.单点登录类型选择：CAS协议；
+	- 3.单点登录服务器地址：CAS服务器地址
+	- 4.单点登录地址：CAS认证地址
+	- 5.客户端地址：登录成功后的回调地址；
+	- 
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011184936674-128042574.png)
+
+##### Oauth2 单点登录集成
+- OAuth2单点登录流程
+单点登录时，判断二级域名对应的单点登录类型为Oauth2单点登录跳转到OAUTH2单点登录系统，登陆成功后调用回调地址并附带授权码参数，回调api处理逻辑中，会根据授权码获取对应的Token，再根据Token获取用户名。
+
+- Oauth2单点登录配置如下：
+	- 1.单点域名：平台域名的代理地址；
+	- 2.单点登录类型选择：Oauth2协议；
+	- 3.单点登录服务器地址：Oauth2服务器地址；
+	- 4.单点登录地址：OAUTH2认证地址；
+	- 5.客户端地址：登陆成功后的回调地址；
+	- 6.clientId：Oauth2认证客户端ID；
+	- 7.client密码：Oauth2认证客户端密码；
+	- 8.Oauth2认证用户信息：Oauth2根据Token获取用户信息地址；
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011191809371-1447981603.png)
+
+- Oauth2单点登录效果：
+	- 1.在系统管理-》域名配置中，创建单点登录配置
+	- 2.浏览器打开配置的域名 http://auth.hzero.org ,自动跳转到单点登录页面，并附带回调地址
+	- 3.单点登录页登录成功后，跳转回 http://auth.hzero.org
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011192027931-1706247631.png)
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011185900923-70165678.png)
+	
 ****
 ****
 
