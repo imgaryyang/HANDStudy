@@ -604,18 +604,243 @@ hzero:
     secret-key: hzero  
 ```
 `配置项介绍`
-- #枚举类型：NORMAL、PAUSED、STOPED
-	- #分别代表的含义为：正常运行、暂停服务、停止服务(通常用于将要被废弃的服务)
-	- hzero.maintain.global-info.state=NORMAL
+- 枚举类型：NORMAL、PAUSED、STOPED
+	- 分别代表的含义为：正常运行、暂停服务、停止服务(通常用于将要被废弃的服务)
+		- hzero.maintain.global-info.state=NORMAL
 
 - 枚举类型如上
 	- *表示服务路由前缀，如hzero-oauth独舞的路由前缀为 /oauth  
-	- hzero.maintain.service-maintain-info.*.state=NORAM
+		- hzero.maintain.service-maintain-info.*.state=NORAM
 
-****
-http://hzerodoc.saas.hand-china.com/zh/docs/service/gateway/
+- 运维接口秘钥，不配置则在程序启动时生成随机key
+	- hzero.maintain.secret-key=key
+
+**3.运维方式**
+
+- open api 方式
+	- 请求路径：/maintain?secretKey=&openAll=&openList=&closeList
+	- 请求样例： http://localhost:8080/maintain?secretKey=a2fe79b5-bc8c-4d0b-bb95-a9aeada2a47a&openAll=true
+	- 响应样例： 200 [空]
+```
+请求参数:
+    参数名       参数含义               是否必输
+	secretKey   秘钥                      是     
+	openAll     全局状态              true or false
+	openList    开启NORMAL状态的路径       否  
+	closeList   开启PAUSED状态的路径列表    否
+```
+
+- 配置文件配置
+	- 如果没有接入配置中心，直接在应用中配置并重启。
+	- 如果接入配置中心，通过配置中心配置即可，利用配置中心的机制刷新配置
+
 ### 认证服务
+`组件编码 hzero-oauth`
+
+#### 简介
+**1.概述**
+`hzero-oauth` 服务是基于`Spring Security`、`Spring OAuth2`、`JWT` 实现的统一认证服务，登录基于Spring Security 的标准登录流程，客户端授权支持 oauth2.0 的四中授权模式：`授权码模式`、`简化模式`、`密码模式`、`客户端模式`，授权流程跟标准的oauth2 流程一致。web端采用`简化模式(implicit)`登录系统，移动端可使用`密码模式(password)`登录系统。并支持基于`Spring Social` 的第三方账号登录方式
+
+**2.组件坐标**
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-oauth</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+**3.主要功能**
+- 统一登录界面
+- 账户、手机、邮箱登录
+- 短信登录
+- 第三方登录功能
+- 可定制化登录模板
+
+**4.服务配置**
+OAuth 读物的参数配置使用场景具体惨老OAuth 服务下的其它文档
+```
+hzero:
+  send-message:
+    # 手机登录发送验证码模板代码
+    mobile-login: HOTH.MOBILE_LOGIN
+    # 修改密码发送验证码模板代码
+    modify-login-password: HOTH.MODIFY_PASSWORD
+  oauth:
+    # 认证服务器 自定义资源匹配器
+    # 可实现 ResourceMatcher 接口，自定义 OAuth ResourceServer 对哪些API认证
+    custom-resource-matcher: false
+    # 授权码模式验证 client 时不检查 client 的一致性
+    not-check-client-equals: false
+    # 移动设备ID参数
+    device-id-parameter: device_id
+    # 登录设备来源参数
+    source-type-parameter: source_type
+    # 移动端开启图形验证码校验，默认不开启
+    enable-app-captcha: false
+    # 始终开启图形验证码校验，默认否
+    # 设置为 true 时，在进入登录页面时就显示图形验证码
+    enable-always-captcha: false
+    # client_credentials 模式是否返回 refresh_token，标准模式不返回
+    credentials-allow-refresh: false
+    # 登录页面标题
+    title: HZERO
+    login:
+      # 允许使用的登录名，默认有 用户名、邮箱、手机号
+      support-fields: username,email,phone
+      # 手机登录参数
+      mobile-parameter: phone
+      # 登录页面默认模板，oauth 提供了两套模板
+      # 在请求 /oauth/authorize 接口时，可通过 template 参数指定使用的模板
+      default-template: main
+      # 默认登录成功跳转地址
+      # 在直接访问 oauth 的登录地址时，登录成功后会跳转到这个默认地址
+      success-url: http://dev.hzero.org/workplace
+    logout:
+      # 退出时是否清理token
+      clear-token: true
+    sso:
+      # 是否启用二级域名单点登录
+      enabled: false
+      service: 
+        # oauth 服务地址
+        baseUrl: http://dev.hzero.org:8080/oauth
+      # SAML 协议登录相关配置  
+      saml:
+        entity_id: hzero:org:sp
+        passphrase: secret
+        private_key: MIIEvQIBADANBgk......
+        certificate: MIIDEzCCA.......
+    password:
+      # 是否启用 RSA 加密
+      enable-encrypt: true
+      # 密码传输加密：公钥
+      public-key: MFwwDQYJKoZIhvcNAQEBB......
+      # 密码传输加密：私钥
+      private-key: MIIBVQIBADANBgkqhkiG......
+```
+
+#### OAuth授权介绍
+##### 标准登录
+可直接访问OAuth 登录地址进行登录，`http://domain/oauth/login`，需配置默认的登录成功跳转地址，否则登录成功后会默认跳回登录页面
+
+登录的字段默认支持 `用户名(username)、邮箱(email)、手机号(phone)`，可通过`support-fields`配置限制登录方式
+
+```
+hzero:
+  oauth:
+    # 标题
+    title: ${HZERO_OAUTH_TITLE:HZERO}
+    login:
+      # 允许使用的登录名，默认有 用户名、邮箱、手机号
+      support-fields: ${HZERO_OAUTH_LOGIN_SUPPORT_FIELDS:username,email,phone}
+      # 默认登录成功跳转地址
+      success-url: ${HZERO_OAUTH_LOGIN_SUCCESS_URL:http://domain/index}
+```
+
+##### 用户锁定
+登录流程中，用户校验主要会涉及账号有效性、租户有效性、角色分配等校验。
+
+其中，如果用户输入密码错误，增加密码错误次数（通过缓存记录），查询用户所属租户的安全策略，接着检查是否达到了`最大错误次数`，如果`允许锁定用户`，则`将用户锁定`
+
+用户密码错误，如果启用了验证码，且密码错误次数超过`验证码检查阀值`则会校验验证码，进入登录页面时会判断是否显示验证码。
+
+用户锁定之后可以通过`忘记密码`找回，或者在`账户管理`处理解锁用户
+
+- 与用户密码、登录相关的请在`安全策略`下配置
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011103620504-1012564945.png)
+
+
+##### Web端授权
+**OAuth标准登录授权流程**
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011104020082-1185778795.png)
+
+前后端分离下，web端采用`简化模式`授权，由前端页面跳转到oauth 登录页面统一登录，前端检查到用户未登录时（返回`401状态码`），跳转到oauth 进行用户认证，获取 `access_token`。
+
+- 1.用户接口返回 401
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011104516786-563401654.jpg)
+
+- 2. 访问 `/oauth/authorize` 授权端点
+前端检测到401时，访问 `http://domain/oauth/oauth/authorize?response_type=token&client_id=client&redirect_uri=redirect_uri` 地址，将用户引导到oauth 登录。
+```
+response_type:授权类型,固定token
+client_id:客户端名称，需在oauth_client 表中配置客户端
+redirect_uri:登陆成功后的重定向地址，需与client对应的重定向地址保持一致
+```
+
+**其他可传参数**
+```
+template:使用的登录模板，默认有main、portal，也可以自己按照标准目录开发模板，请求/authirize 接口时通过该参数传入要使用的模板即可
+
+logout_redirect_uri:退出后重定向地址，可通过该参数指定退出成功后跳转的地址
+
+user_type:控制登录用户类型，中台用户-P/C端用户-C
+```
+>实际上该地址是进入到`spring security`的过滤器链，spring security 检查到用户未登录，会重定向到登录界面
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011105655968-1614919587.jpg)
+
+- 3.用户登录
+用户登录成功后，重定向到  `/oauth/authorize` 端点，获取`access_token`。
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011105743466-481344437.jpg)
+
+- 4.登陆成功，返回access_token
+`/oauth/authorize`端点成功创建`access_token`后，根据`redirect_uri` 并在uri后拼接access_token相关参数，重定向回去，至此授权完成。前端拿到 access_token 后，在访问后端服务。
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011110312353-1502373934.jpg)
+
+```
+access_token:授权令牌
+expire_in:令牌过期时间
+scope:授权范围
+```
+
+- 5.access_token 唯一性
+web端通过加入sessionId来控制access_token 的唯一性，这个session是来自oauth服务的session。
+
+- 6.图片验证码
+如果想每次进入登录页面时，都启用验证码，需启用如下配置
+```
+hzero:
+  oauth:
+    # 始终开启图形验证码校验，默认否
+    enable-always-captcha: ${HZERO_OAUTH_ENABLE_ALWAYS_CAPTCHA:false}
+```
+
+##### 移动端授权
+移动端授权可以使用`密码模式`给用户认证授权，移动端有自己的app登录入口，不能跳转到web页面登录。APP登录页面，用户输入用户名和密码即可完成登录。
+
+`注意：移动端登录时，密码需要用RSA加密后传输到后端。`
+- 1.访问`/oauth/token`授权端点
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011112027295-1661079453.jpg)
+
+```
+grant_type:授权类型,固定为password
+client_id:客户端名称
+client_secret:客户端秘钥
+source_type:登录来源，移动设备固定为 app
+device_id:登录设备ID，如果不传入设备ID，用户在多个设备登录返回的access_token 是一样的
+username:登录用户名
+password:登录密码
+user_type:用户类型，中台用户-P/C端用户-C
+```
+`移动设备登录，需传入source_type=app标识`
+
+- 2.配置项说明
+```
+hzero:
+  oauth:
+    # 验证 client 时不检查 client 的一致性
+    not-check-client-equals: ${HZERO_OAUTH_NOT_CHECK_CLIENT_EQUALS:false}
+    # 移动设备ID参数
+    device-id-parameter: ${HZERO_OAUTH_DEVICE_ID_PARAMETER:device_id}
+    # 登录设备来源参数
+    source-type-parameter: ${HZERO_OAUTH_SOURCE_TYPE_PARAMETER:source_type}
+```
+
+##### 并发登录控制
+可在安全策略下配置WEB端或移动端 是否允许同一个用户在多处登录，移动端和WEB端互不影响。当不允许用户多出登录时
 ****
+****
+***
 ****
 ****
 ****
