@@ -116,7 +116,7 @@ HZERO 利用主流的开源监控工具，从日志、服务运行环境、调�
 
 ---
 ## 服务列表
-**基础组件列表**
+**基础组件列表**   
 - Minio	对象存储服务	RELEASE.2018-05-25T19-49-13Z
 - Redis	缓存数据库	    4.0.2
 - Mysql	数据库	         5.7.22
@@ -147,7 +147,7 @@ hzero-front-hwfp				1.0.0			新版工作流模块
 >注意：hzero-front-hwfl 服务 最新版本为 0.11.1 后续不再维护； hzero-front-hptl 最新版本为0.11.2, 后续不再维护；
 
 
-**HZERO 父依赖**
+**HZERO 父依赖**  <br/>
 HZERO提供提供统一的版本控制，只需要声明父依赖的版本，项目中只需要添加groupId和artifactId声明就可以了，使用父依赖可以极大的简化项目对HZERO版本的管理。
 
 `父项目POM坐标`
@@ -160,7 +160,7 @@ HZERO提供提供统一的版本控制，只需要声明父依赖的版本，项
 ```
 
 
-**Starter 列表** |
+**Starter 列表** |  <br/>
 以下是HZERO提供的基础依赖信息。
 ```
 hzero-starter-core		1.0.0.RELEASE	基础依赖，用户信息相关和一些工具类
@@ -198,7 +198,7 @@ hzero-starter-social-qq		1.0.0.RELEASE	三方QQ登录
 hzero-starter-social-wechat		1.0.0.RELEASE	三方微信登录
 ```
 
-**Boot列表** |
+**Boot列表** |  <br/>
 以下是HZERO提供的客户端依赖信息。
 ```
 hzero-boot-common		1.0.0.RELEASE	公共依赖，服务声明等
@@ -236,7 +236,7 @@ hzero-gateway-helper-api		1.0.0.RELEASE	网关鉴权API客户端
 hzero-gateway-helper-default		1.0.0.RELEASE	网关鉴权API客户端默认实现
 ```
 
-**Plugin 列表** |
+**Plugin 列表** |   <br/>
 以下是HZERO提供的插件依赖信息。
 ```
 组件			版本				SaaS和OP说明		描述
@@ -260,7 +260,7 @@ hzero-swagger	HSWG	8050	Swagger测试服务	不区分	1.0.0.RELEASE
 
 ```
 
-**系统服务列表** |
+**系统服务列表** |   <br/>
 以下是主要介绍HZERO平台相关的通用服务信息。
 >HZERO前端服务包括了平台所有服务所有的前端功能。
 老版工作流服务 `hzero-workflow` 和 `hzero-workflow-editor` 最终版本定为 `0.10.0.RELEASE`，后续不再提供支持，可升级使用 `hzero-workflow-plus`
@@ -302,7 +302,7 @@ hzero-im	HIMS	8025	即时通讯服务	不区分	1.0.0.RELEASE
 hzero-front	HFNT	80	HZERO前端	不区分	1.0.0.RELEASE
 ```
 
-**组件仓库**  |
+**组件仓库**  |    <br/>
 在POM中依赖Hzero组件需要保证项目POM中制定了HZERO仓库信息
 ```
 <repositories>
@@ -330,7 +330,7 @@ hzero-front	HFNT	80	HZERO前端	不区分	1.0.0.RELEASE
 `组件编码 hzero-register`
 
 #### 简介
-**1.概述**
+**1.概述**   <br/>
 基于Eureka的平台注册服务
 
 **2.组件坐标**
@@ -371,7 +371,7 @@ eureka:
 ```
 
 
-**2.启动类配置**
+**2.启动类配置**      <br/>
 register的启动类上需排除SecurityAutoConfiguration 配置类,因为注册中心不需要Security安全配置
 ```
 @EnableHZeroRegister
@@ -391,7 +391,7 @@ public class RegisterApplication {
 `组件编码 hzero-config`
 
 #### 简介
-**概述**  |
+**概述**  |  <br/>
 微服务配置管理服务
  
 **2.组件坐标**
@@ -428,7 +428,7 @@ hzero:
       skip-parse-services: register, gateway, oauth
 ```
 
-**2.启动类配置**  |
+**2.启动类配置**  |   <br/>
 config 的启动类上需排除 ConfigServerAutoConfiguration 配置类。
 
 ```
@@ -443,7 +443,7 @@ public class ConfigApplication {
 }
 ```
 
-**路由管理**
+**路由管理**   <br/>
 config 服务有一个重要的功能是服务路由管理，正常情况下，其他服务启动成功并注册到注册中心后，config服务监听到服务注册后，会自动获取服务的文档信息，可惜服务路由信息，并更新到 `hzero_governance 的hsgp_service_routee `表中，在非正常情况下，如果无法自动更新路由，可在`路由管理`功能下手动维护
 
 
@@ -451,7 +451,7 @@ config 服务有一个重要的功能是服务路由管理，正常情况下，�
 `组件编码 hzero-gateway`
 
 #### 简介
-**1.概述**
+**1.概述**  <br/>
 基于zuul的微服务网关服务
 
 **2.组件坐标**
@@ -562,7 +562,7 @@ hzero:
     secret-key: hzero
 ```
 
-**2.启动类配置**  |
+**2.启动类配置**  |   <br/>
 gateway的启动类上徐排除SecurityAutoConfiguration 配置类，因为网关只做路由转发，不需要Security安全配置
 ```
 @EnableHZeroGateway
@@ -595,8 +595,8 @@ IAM刷新权限，并缓存到网关所在的Redis database 下，网关默认re
 
 
 #### 整体运维
-**1.功能说明**
-整体运维功能yongyu在服务运维期间提示用户某些服务不可用或全局服务运维，但前提必须保证网关服务可用。运维人员可通过调用网关的运维接口，通过传参设置运维模式和运维信息，或者关闭运维。
+**1.功能说明**   <br/>
+整体运维功能用于在服务运维期间提示用户某些服务不可用或全局服务运维，但前提必须保证网关服务可用。运维人员可通过调用网关的运维接口，通过传参设置运维模式和运维信息，或者关闭运维。
 
 **2.配置样例**
 ```
@@ -645,7 +645,7 @@ closeList   开启PAUSED状态的路径列表    否
 `组件编码 hzero-oauth`
 
 #### 简介
-**1.概述**
+**1.概述**   <br/>
 `hzero-oauth` 服务是基于`Spring Security`、`Spring OAuth2`、`JWT` 实现的统一认证服务，登录基于Spring Security 的标准登录流程，客户端授权支持 oauth2.0 的四中授权模式：`授权码模式`、`简化模式`、`密码模式`、`客户端模式`，授权流程跟标准的oauth2 流程一致。web端采用`简化模式(implicit)`登录系统，移动端可使用`密码模式(password)`登录系统。并支持基于`Spring Social` 的第三方账号登录方式
 
 **2.组件坐标**
@@ -664,7 +664,7 @@ closeList   开启PAUSED状态的路径列表    否
 - 第三方登录功能
 - 可定制化登录模板
 
-**4.服务配置**
+**4.服务配置**    <br/>
 OAuth 服务的参数配置使用场景具体参考OAuth 服务下的其它文档
 ```
 hzero:
@@ -759,7 +759,7 @@ hzero:
 
 
 ##### Web端授权
-**OAuth标准登录授权流程**
+**OAuth标准登录授权流程**   <br/>
 ![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011104020082-1185778795.png)
 
 前后端分离下，web端采用`简化模式`授权，由前端页面跳转到oauth 登录页面统一登录，前端检查到用户未登录时（返回`401状态码`），跳转到oauth 进行用户认证，获取 `access_token`。
@@ -1019,11 +1019,11 @@ captchaKey		发送手机验证码返回的captchaKey	Y
 ![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011163631150-1692997045.png)
 
 ##### 接口返回说明
-**请求失败**
+**请求失败**      <br/>
 可通过 `success=false` 判断接口是否调用失败，如果调用失败，返回失败编码 `code` 及消息 `message`。
 ![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011163751020-1250049556.png)
 
-**请求成功**
+**请求成功**      <br/>
 请求成功则返回 `access_token`
 ![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191011163846540-770966151.png)
 
@@ -1135,11 +1135,11 @@ hzero:
 #####三方登录简介
 三方登录目前 HZERO 支持 微信、QQ 三方登录，同时支持项目上开发特定的三方登录，只需按规范开发相应的实现，然后在 oauth 服务中引入依赖即可。
 	
-**1.组件依赖**
+**1.组件依赖**    <br/>
 如果使用某个组件，需自行在oauth服务中引入相关依赖
 
 - QQ
-```
+```xml
 <dependency>
     <groupId>org.hzero.starter</groupId>
     <artifactId>hzero-starter-social-qq</artifactId>
@@ -1148,7 +1148,7 @@ hzero:
 ```
 
 - 微信
-```
+```xml
 <dependency>
     <groupId>org.hzero.starter</groupId>
     <artifactId>hzero-starter-social-wechat</artifactId>
@@ -1157,7 +1157,7 @@ hzero:
 ```
 
 
-**2.三方登录组件**
+**2.三方登录组件**        <br/>
 hzero-starter-social 三方登录组件基于 spring-social、spring-security、oauth2.0 扩展开发，hzero 三方组件如下：
 - hzero-starter-social-core : 三方登录核心组件，抽象了三方认证流程，及相关API封装
 - hzero-starter-social-qq : 三方QQ登录
@@ -1169,7 +1169,7 @@ Spring Social 三方登录流程是基于 oauth2.0 标准的授权码模式来�
 ![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191012110449720-1141008877.jpg)
 
 ##### 三方应用管理
-**1.申请授权信息**
+**1.申请授权信息**    <br/>
 在使用某种三方登录时，首先需要大对应三方开放平台上申请三方应用的授权信息。
 - QQ 开放平台 ：https://connect.qq.com/index.html
 - 微信 开放平台：https://open.weixin.qq.com/cgi-bin/index
@@ -1187,12 +1187,565 @@ Spring Social 三方登录流程是基于 oauth2.0 标准的授权码模式来�
 >申请成功后，将得到三方应用平台的 APP ID 以及 APP Key，例如 QQ 开放平台申请的应用：
 
 
-**2.配置三方应用**
+**2.配置三方应用**   <br/>
+首先需要在 `三方应用管理` 功能下配置系统的三方应用信息，维护好之后，才可以在个人中心三方账号及oauth登录页面看到三方应用的图标。
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191012134518809-1619203107.png)
 
-### 事务服务
+- 应用编码：
+	- 取自值集：HIAM.OPEN_APP_CODE，应用编码的值就是回调地址中的 appCode
+
+- 登录渠道：
+	- 取自值集：HIAM.CHANNEL，前端根据渠道查询对应渠道的三方应用，且在调用 /open/** 接口时传入渠道参数(channel=xx)
+
+- APP ID：申请的三方应用的授权 APP ID
+- APP Key：申请的三方应用的授权 APP Key
+- 应用图片：三方应用的图标
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191012140951449-1064919291.png)
+
+##### 三方登录接口
+下面以 QQ 三方登录为例介绍三方授权相关的一些接口。
+
+**1.获取三方登录方式**    <br/>
+调用`/oauth/login/init-params?channel={channel}&client_id={clientId}` 获取三方登录方式
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191012141221928-34539374.png)
+
+```
+openLoginWays: 三方登录方式
+isNeedCaptcha: 是否需要输入图形验证码
+```
+
+**2. PC端跳转三方授权平台**  <br/>
+PC 端需跳转到三方平台让三方用户授权登录，APP 端则直接使用 SDK 拉起本地应用授权。
+
+访问 http://domain/oauth/open/qq?channel=pc，后台自动跳转到 QQ 授权页面
+
+**3. 用户授权回调**    <br/>
+用户授权后，三方平台将回调 `http://domain/oauth/open/qq/callback?code=XXXXX&state=xxx`，并带上授权码返回。移动端则会将授权码返回本地应用
+
+之后的获取 access_token、认证用户是否已绑定，都是在后端自动进行，无需特别处理。（用户如果未绑定，默认返回错误信息到登录页面，将在下个迭代中支持跳转到绑定账号页面）
+
+**4. 移动端三方认证接口** <br/>
+移动端在本地获取到三方平台的 access_token 和 open_id 之后，调用后端接口 /oauth/token/open 认证用户及获取 oauth access_token。
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191012142947077-1850798085.png)
+
+>认证成功将返回 access_token，认证失败将返回对应的失败信息。
+
+`接口返回码`
+```
+返回编码	说明
+hoth.social.providerUserNotFound	未查询到您的三方用户信息
+hoth.social.openIdNotFound	无法获取到您的三方账号
+hoth.social.userAlreadyBind	您已绑定三方账户
+hoth.social.openIdAlreadyBindOtherUser	您的三方账户已绑定其他用户，您可以先解绑再绑定当前用户
+hoth.social.providerNotBindUser	三方账号未绑定系统用户
+hoth.social.userNotFound	系统用户不存在
+```
+
+
+**5. PC端用户绑定三方账号** <br/>
+用户登录后，可在个人中心绑定三方账号。绑定账号访问 http://domain/oauth/open/qq?channel=pc&access_token=xxxxx&bind_redirect_uri=redirectUrl
+
+```
+channel: 登录渠道
+access_token: 用户登录后的 access_token
+bind_redirect_uri: 绑定成功或失败的重定向地址，绑定失败将在重定向地址后通过 `social_error_message` 参数返回。
+```
+
+##### 开发三方登录
+HZERO 目前已支持 微信、QQ 三方登录方式，如果项目上需要开发其它的三方登录，可按照如下步骤开发。三方应用平台相关的接口、参数、返回内容等请到对应三方开放平台查找。
+
+**1. 创建三方组件**  <br/>
+开发三方登录时，建议新建一个项目或模块，开发完成后在 oauth 服务中依赖该组件即可。parent 依赖 hzero-starter-social-parent，引入 hzero-starter-social-core 组件。下面以QQ开发的流程为例讲解如何基于 hzero-starter-social-core 开发三方登录。
+
+- QQ Pom
+```xml
+<parent>
+    <groupId>org.hzero.starter</groupId>
+    <artifactId>hzero-starter-social-parent</artifactId>
+    <version>1.0.0.RELEASE</version>
+</parent>
+<artifactId>hzero-starter-social-qq</artifactId>
+
+<dependencies>
+    <dependency>
+        <groupId>org.hzero.starter</groupId>
+        <artifactId>hzero-starter-social-core</artifactId>
+        <version>${hzero.starter.version}</version>
+    </dependency>
+</dependencies>
+```
+
+**2. 三方API封装**  <br />
+① 三方用户信息类：实现 org.hzero.starter.social.core.common.api.SocialUser 接口，根据三方开放平台文档，封装三方用户信息
+
+```java
+public class QQUser implements SocialUser {
+
+    private String ret;
+
+    private String msg;
+
+    private String openId;
+
+    private String nickname;
+
+    private String figureurl;
+
+    private String gender;
+
+    // getter/setter...
+}
+```
+
+② 三方接口类：继承 org.hzero.starter.social.core.common.api.SocialApi 接口，该接口类有一个默认的 getUser 接口方法，用于向三方平台获取用户信息。
+```java
+public interface QQApi extends SocialApi {
+
+}
+```
+
+③ 三方接口默认实现：继承 org.hzero.starter.social.core.common.api.AbstractSocialApi 抽象类，并实现 QQApi 三方接口。
+
+在勾走按方法中，必须包含access_token 参数，Provider则封装了三方平台的信息，包括APP ID、APP Key、Token 地址、用户地址等等。
+在构造方法中调用三方平台获取open_id 的接口，根据access_token 查询open_id 。有些三方登录再返回access_token 时会将open_id 直接返回，这时可以不用查询open_id；有些则需要一次接口调用。
+
+实现getUser方法，调用三方平台用户信息查询接口，根据APP ID及openId查询用户信息
+
+```java
+public class DefaultQQApi extends AbstractSocialApi implements QQApi {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultQQApi.class);
+
+    private String userInfoUrl;
+    private String openIdUrl;
+
+    /**
+     * 客户端 appId
+     */
+    private String appId;
+    /**
+     * openId
+     */
+    private String openId;
+
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+    public DefaultQQApi(String accessToken, Provider provider) {
+        super(accessToken);
+        // APP ID
+        this.appId = provider.getAppId();
+        // 获取用户信息的地址
+        this.userInfoUrl = provider.getUserInfoUrl() + "?oauth_consumer_key={appId}&openid={openId}";
+        // 获取 open_id 的地址
+        this.openIdUrl = provider.getOpenIdUrl() + "?access_token={accessToken}";
+        // 根据 access_token 获取 open_id
+        this.openId = getOpenId(accessToken);
+    }
+
+    @Override
+    public QQUser getUser() {
+        // 获取用户信息
+        String result = getRestTemplate().getForObject(userInfoUrl, String.class, appId, openId);
+
+        QQUser user = null;
+        try {
+            user = mapper.readValue(result, QQUser.class);
+        } catch (Exception e) {
+            LOGGER.error("parse qq UserInfo error. result : {}", result);
+        }
+        if (user == null) {
+            throw new ProviderUserNotFoundException(SocialErrorCode.PROVIDER_USER_NOT_FOUND);
+        }
+        user.setOpenId(openId);
+        return user;
+    }
+
+    /**
+     * 获取用户 OpenId
+     */
+    private String getOpenId(String accessToken) {
+        // 返回结构：callback( {"client_id":"YOUR_APPID","openid":"YOUR_OPENID"} );
+        String openIdResult = getRestTemplate().getForObject(openIdUrl, String.class, accessToken);
+        if (StringUtils.isBlank(openIdResult) || openIdResult.contains("code")) {
+            throw new CommonSocialException(SocialErrorCode.OPEN_ID_NOT_FOUND);
+        }
+        // 解析 openId
+        String[] arr = StringUtils.substringBetween(openIdResult, "{", "}").replace("\"", "").split(",");
+        String openid = null;
+        for (String s : arr) {
+            if (s.contains("openid")) {
+                openid = s.split(":")[1];
+            }
+        }
+        return openid;
+    }
+}
+
+``` 
+
+**3. API 适配器**
+开发三方引用与本地应用用户之间的适配器，继承`org.hzero.starter.social.core.common.connect.SocialApiAdapter` 抽象类，覆盖`setConnectionValues`，在方法中，首先调用api获取用户信息，然后向 `ConnectionValues`中设置用户昵称、open_id 等。
+
+```java
+public class QQApiAdapter extends SocialApiAdapter {
+    /**
+     * QQApi 与 Connection 做适配
+     * @param api QQApi
+     * @param values Connection
+     */
+    @Override
+    public void setConnectionValues(SocialApi api, ConnectionValues values) {
+        // 调用三方接口获取用户信息
+        QQUser user = (QQUser) api.getUser();
+        // 设置昵称
+        values.setDisplayName(user.getNickname());
+        values.setImageUrl(user.getFigureurl());
+        // 设置 open_id
+        values.setProviderUserId(user.getOpenId());
+    }
+}
+```
+
+**4. 三方服务提供商** <br/>
+服务商用于提供具体的API，需继承`org.hzero.starter.social.core.common.connect.SocialServiceProvider`抽象类，在getSocialApi 方法中，返回三方API的具体实现类。
+
+```
+public class QQServiceProvider extends SocialServiceProvider {
+
+    private Provider provider;
+
+    public QQServiceProvider(Provider provider, SocialTemplate template) {
+        super(provider, template);
+        this.provider = provider;
+    }
+
+    @Override
+    public QQApi getSocialApi(String accessToken) {
+        // 构造服务提供商API
+        return new DefaultQQApi(accessToken, provider);
+    }
+}
+```
+
+
+**5. OAuth token 模板类** <br/>
+OAuth token 模板类用于获取三方应用 access_token，刷新Token 等等，需继承`org.hzero.starter.social.core.common.connect.SocialTemplate`抽象类，根据实际API获取情况获取授权信息。
+```
+public class QQTemplate extends SocialTemplate {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(QQTemplate.class);
+
+    public QQTemplate(Provider provider) {
+        super(provider);
+        // 设置带上 client_id、client_secret
+        setUseParametersForClientAuthentication(true);
+    }
+
+    /**
+     * 解析 QQ 返回的令牌
+     */
+    @Override
+    protected AccessGrant postForAccessGrant(String accessTokenUrl, MultiValueMap<String, String> parameters) {
+        // 返回格式：access_token=FE04********CCE2&expires_in=7776000&refresh_token=88E4***********BE14
+        String result = getRestTemplate().postForObject(accessTokenUrl, parameters, String.class);
+        if (StringUtils.isBlank(result)) {
+            throw new RestClientException("access token endpoint returned empty result");
+        }
+        LOGGER.debug("==> get qq access_token: " + result);
+        String[] arr = StringUtils.split(result, "&");
+        String accessToken = "", expireIn = "", refreshToken = "";
+        for (String s : arr) {
+            if (s.contains("access_token")) {
+                accessToken = s.split("=")[1];
+            } else if (s.contains("expires_in")) {
+                expireIn = s.split("=")[1];
+            } else if (s.contains("refresh_token")) {
+                refreshToken = s.split("=")[1];
+            }
+        }
+        return createAccessGrant(accessToken, null, refreshToken, Long.valueOf(expireIn), null);
+    }
+
+    /**
+     * QQ 响应 ContentType=text/html;因此需要加入 text/html; 的处理器
+     */
+    @Override
+    protected RestTemplate createRestTemplate() {
+        RestTemplate restTemplate = super.createRestTemplate();
+        restTemplate.getMessageConverters().add(new StringHttpMessageConverter(Charsets.UTF_8));
+        return restTemplate;
+    }
+}
+```
+
+**6. 连接工厂** <br/>
+连接工厂用于创建 Connection 连接信息，需继承 `org.hzero.starter.social.core.common.connect.SocialConnectionFactory`类。
+```
+public class QQConnectionFactory extends SocialConnectionFactory {
+
+    public QQConnectionFactory(Provider provider, SocialServiceProvider serviceProvider, SocialApiAdapter apiAdapter) {
+        super(provider, serviceProvider, apiAdapter);
+    }
+}
+```
+
+**7. 连接工厂构造器** <br/>
+连接工厂构造器用于创建连接工厂，需实现 `org.hzero.starter.social.core.common.configurer.SocialConnectionFactoryBuilder` 接口并实现三个方法，getChannel 返回登录渠道，getProviderId 返回应用编码，在builderConnectionFactory 中构造连接工厂。
+
+参数provider 会自动根据channel 和provider 查询并传入，相关授权地址需自行到三方平台开放平台获取。
+
+```
+@Configuration
+public class QQSocialBuilder implements SocialConnectionFactoryBuilder {
+
+    @Override
+    public String getChannel() {
+        return ChannelEnum.pc.name();
+    }
+
+    @Override
+    public String getProviderId() {
+        return ProviderEnum.qq.name();
+    }
+
+    @Override
+    public SocialConnectionFactory buildConnectionFactory(Provider provider) {
+        // 获取授权码地址
+        final String URL_AUTHORIZE = "https://graph.qq.com/oauth2.0/authorize";
+        // 获取令牌地址
+        final String URL_GET_ACCESS_TOKEN = "https://graph.qq.com/oauth2.0/token";
+        // 获取 openId 的地址
+        final String URL_GET_OPEN_ID = "https://graph.qq.com/oauth2.0/me";
+        // 获取用户信息的地址
+        final String URL_GET_USER_INFO = "https://graph.qq.com/user/get_user_info";
+
+        provider.setAuthorizeUrl(URL_AUTHORIZE);
+        provider.setAccessTokenUrl(URL_GET_ACCESS_TOKEN);
+        provider.setOpenIdUrl(URL_GET_OPEN_ID);
+        provider.setUserInfoUrl(URL_GET_USER_INFO);
+        // 创建适配器
+        QQApiAdapter apiAdapter = new QQApiAdapter();
+        // 创建三方模板
+        QQTemplate template = new QQTemplate(provider);
+        // 创建服务提供商
+        QQServiceProvider serviceProvider = new QQServiceProvider(provider, template);
+        // 创建连接工厂
+        return new QQConnectionFactory(provider, serviceProvider, apiAdapter);
+    }
+}
+```
+
+**8. 添加配置** <br/>
+在 resources 资源目录下，新建 `META-INF` 目录，添加 `spring.factories` 文件，并将 QQSocialBuilder 添加到自动配置。内容如下：
+```
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.hzero.starter.social.qq.config.QQSocialBuilder
+```
+
+**9. API 测试** <br/>
+开发完成后，就可以打包发布，然后在 oauth 服务中引入依赖即可使用。
+
+正常情况下，个人中心或登录页面，我们可以看到在三方应用管理配置的三方登录方式。
+
+点击QQ图标会访问 http://domain/oauth/open/qq?channel=pc，接着会跳转到三方应用平台，后续的流程可参考三方登录流程图。
+
+#### 客制化开发
+待完善
+
+
+### 事务服务 （hzero-asgard）
+`组件编码 hzero-asgard`
+#### 简介
+**概述** <br/>
+采用SAGA模型的分布式事务管理服务
+
+**组件坐标**
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-asgard</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+**3.主要功能** <br/>
+- 事务定义
+- 事务实例
+
+**消费端配置项说明 ** <br/>
+```
+choerodon:  
+  # saga 消费端配置说明
+  saga:
+    consumer:
+      enabled: false # 是否开启saga消费端，默认关闭
+      max-thread-num: 10 # saga消息消费线程池大小，默认大小为10
+      max-poll-size: 200 # 每次拉取消息最大数量，默认大小200
+      core-thread-num: 5 # 核心线程数，默认大小为5
+      poll-interval-ms: 1000 # 拉取间隔（毫秒），默认1000
+    producer:
+      consistency-type: memory # 设置数据一致性处理器，memory为基于内存实现的回查方式，db为基于数据库表实现的回查方式
+  # 任务调度消费端配置说明
+  schedule:
+    consumer:
+      enabled: false # 是否开启系统定时清理过期数据，默认关闭
+      poll-interval-ms: 1000 # 拉取间隔（毫秒），默认1000
+      max-thread-num: 2 # saga消息消费线程池大小，默认大小为2
+      core-thread-num: 1 # 核心线程数，默认大小为1
+```
+
 ### IAM服务
+`组件编码 hzero-iam`
+
+#### 简介
+
+**1.概述** <br/>
+权限管理服务，平台统一的权限体系架构
+
+**2.组件坐标** <br/>
+- OP 版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>hzero-iam</artifactId>
+	<version>${hzero.service.version}</version>
+</dependency>
+```
+
+- Saas版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>hzero-iam-saas</artifactId>
+	<version>${hzero.service.version}</version>
+</dependency>
+```
+
+**3.主要功能** <br/>
+- 角色管理
+- 菜单管理
+- 账户管理
+- 用户组管理
+- 租户管理
+- 权限刷新
+- 单据权限管理
+
+#### 服务配置
+```
+hzero:
+  data:
+    permission:
+      # 是否启用数据权限屏蔽
+      enabled: true
+      # 数据库所有者模式，例如 SqlServer 下的 dbo/guest
+      db-owner: 
+  ## 发送验证码相关    
+  send-message:
+    # 修改密码成功是否发送消息
+    send-modify-password-success: true
+    # 修改密码成功消息代码
+    modify-password-success: HIAM.MODIFY_PASSWORD_SUCCESS
+    # 创建用户是否发送消息
+    send-create-user: true
+    # 创建用户成功消息代码
+    create-user: HIAM.CREATE_USER
+    # 用户注册消息代码
+    register-user: HIAM.REGISTER_USER
+    # 找回密码消息代码
+    find-password: HIAM.FIND_PASSWORD
+    # 验证码手机消息代码
+    validate-phone: HIAM.VALIDATE_PHONE
+    # 验证码邮箱消息代码
+    validate-email: HIAM.VALIDATE_EMAIL
+    # 修改手机消息代码
+    modify-phone: HIAM.MODIFY_PHONE
+    # 修改邮箱消息代码
+    modify-email: HIAM.MODIFY_EMAIL
+  ## 验证码配置
+  captcha:
+    sms:
+      # 短信验证码过期时间(分)
+      expire: 5
+      # 验证码发送间隔时间(秒)
+      interval: 60
+      # 同一个账号发送次数限制
+      limit-time: 10
+      # 次数限制的间隔时间(时)
+      limit-interval: 12
+    enable: true
+    # 测试时禁用验证码功能
+    # 设置为 true 时，则不会真正发送验证码，一般在压测时开启此配置
+    test-disable: false
+  ## 服务启动数据初始化相关
+  start-init:
+    # 是否初始化三方登陆方式到缓存
+    open-login-way: true
+    # 是否初始化密码策略到缓存
+    password-policy: true
+    # 是否初始化用户到缓存
+    user: true
+  import:
+    # 初始化导入表，第一次启动服务的时候需开启此设置
+    init-table: false
+  tenant:
+    init:
+      # 是否开启拦截，只有开启才会拦截租户的新增和更新
+      aspect:
+        enabled: false
+  field-permission:
+    # 是否启用字段权限
+    enable: true
+  ## 刷新权限相关
+  permission:
+    # 是否自动刷新服务权限
+    parse-permission: true
+    # 不需要刷新权限的服务
+    skip-parse-services: register, gateway, oauth, swagger
+    # 刷新权限时是否清除旧的权限
+    clean-permission: false
+  sso:
+    # 启用二级域名单点登录
+    enabled: ${HZERO_OAUTH_SSO_ENABLED:true}
+    provider:
+      # cas key
+      key: ${HZERO_OAUTH_SSO_PROVIDER_KEY:hzero}
+    service: 
+      # Cas 客户端地址
+      baseUrl: ${HZERO_OAUTH_SSO_SERVICE_BASE_URL:http://dev.hzero.org:8080/oauth}
+    # SAML 相关配置  
+    saml:
+      entity_id: hzero:org:sp
+      passphrase: secret
+      private_key: MIIEvQIBADANB.........
+      certificate: MIIDEzCCAfugA.........
+  password:
+    # 密码加密公钥
+    public-key: ${HZERO_OAUTH_PASSWORD_PUBLIC_KEY:MFwwDQYJKo.......}
+    # 密码加密私钥
+    private-key: ${HZERO_OAUTH_PASSWORD_PRIVATE_KEY:MIIBVQI........}  
+```
+
+
+#### 刷新权限
+IAM服务有一个重要的功能是刷新服务权限，正常情况下，其他服务启动成功并注册到注册中心后，IAM监听到服务注册后，会自动获取服务的文档信息，并解析权限更新到iam_permission。在一些非正常情况下，需要手动调用接口刷新服务权限，可参考
+[IAM 特殊接口介绍](http://hzerodoc.saas.hand-china.com/zh/docs/service/iam/inter/)
+
+
+
+
+**** <br/>
+**** <br/>
+**** <br/>
 ### Swagger测试服务
+**** <br/>
+**** <br/>
+**** <br/>
+**** <br/>
 ### 平台基础服务
+**** <br/>
+**** <br/>
+**** <br/>
+**** <br/>
 ### 消息服务
 ### 调度服务
 ### 通用导入服务
