@@ -1597,7 +1597,7 @@ choerodon:
 ### IAM服务
 `组件编码 hzero-iam`
 
-#### 简介
+##### 简介
 
 **1.概述** <br/>
 权限管理服务，平台统一的权限体系架构
@@ -1630,7 +1630,7 @@ choerodon:
 - 权限刷新
 - 单据权限管理
 
-#### 服务配置
+##### 服务配置
 ```
 hzero:
   data:
@@ -1726,14 +1726,306 @@ hzero:
 ```
 
 
-#### 刷新权限
+##### 刷新权限
 IAM服务有一个重要的功能是刷新服务权限，正常情况下，其他服务启动成功并注册到注册中心后，IAM监听到服务注册后，会自动获取服务的文档信息，并解析权限更新到iam_permission。在一些非正常情况下，需要手动调用接口刷新服务权限，可参考
 [IAM 特殊接口介绍](http://hzerodoc.saas.hand-china.com/zh/docs/service/iam/inter/)
 
+#### 用户相关API
+##### 1.简介 
+与用户相关的API主要分布在 `hzero-iam` 服务的如下几个Controller中，包含了管理端的接口、用户登录后可操作的接口、以及Public的接口。
+
+- 用户管理
+分平台级和组户级API，大部分API用在子账户管理功能下，如创建用户、查询用户列表、锁定用户等等。
+
+- 登录用户接口
+用户登录后可访问的API，大部分API用在 `个人中心`功能下，如修改手机号、修改密码、查询个人信息等
+
+- 用户公开接口
+与用户相关的Public API，一般用于 `外部系统调用`、`移动端接口调用`等，如找回密码、注册用户、发送验证码等
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014093207414-1142913021.png)
+
+`主要介绍与用户相关的部分功能的流程，以及一些特殊的说明，具体的可根据本文档在Swagger或具体功能上测试后在对接接口。`
+
+##### 登录用户-修改密码
+说明：登录用户修改自己的密码
+
+**第一步：修改密码** <br />
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014095529336-1467593781.png)
 
 
+- 请求参数
+```
+参数	说明	必输	类型控制
+originalPassword	原始密码	Y	string
+password	新密码	Y	控制至少两种不同字符且长度大于6位
+```
+- 响应参数
+`响应204 则代表成功`
 
-**** <br/>
+- 返回码
+```
+返回编码	说明
+error.ldap.user.can.not.update.password	LDAP用户不能修改密码
+error.password.originalPassword	原始密码错误
+error.password.same	新密码不能与原始密码相同
+```
+
+- 其他
+修改密码成功后，默认会发送站内消息，消息模板可配置 `HIAM.MODIFY_PASSWORD_SUCCESS`
+
+
+##### 登录用户-认证手机
+
+说明：管理端创建用户后，手机需要用户自行认证
+
+**第一步：给手机发送验证码** <br />
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014102237632-1957505253.png)
+
+- 请求参数
+```
+参数	说明	必输	类型控制
+phone	手机号	Y	string
+```
+
+- 响应参数
+```
+参数	说明
+captchaKey	验证码的Key，验证码生成后会缓存，只返回验证码对应的uuid
+message	返回消息，可直接提示给用户
+```
+
+- 其他
+给自己的手机发送验证码的模板 `HIAM.VALIDATE_PHONE`，可在 消息模板 里修改短信内容。
+
+
+**第二步:认证手机** <br />
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014103027071-1414485831.png)
+
+- 请求参数
+```
+参数	说明	必输	类型控制
+captchaKey	上一步得到的验证码 Key	Y	string
+captcha	用户输入的验证码	Y	string
+```
+
+- 响应参数
+响应`204` 则代表成功
+
+
+##### 登录用户-认证邮箱 
+说明：管理端创建用户后，邮箱需要用户自行认证，流程与认证手机一致，只是与 phone 相关的接口或参数改为 email 即可。
+
+
+##### 登录用户-修改手机 
+说明：用户修改自己的手机号，可以通过两种方式修改手机，一是验证原手机号，而是如果原手机无法接收验证码可通过密码找回。
+
+**通过验证手机修改**<br />
+`第一步：给原手机发送验证码`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014102237632-1957505253.png)
+
+- 请求参数
+```
+参数	说明	必输	类型控制
+phone	手机号	Y	string
+```
+
+- 请求参数
+```
+参数	说明	必输	类型控制
+phone	手机号	Y	string
+```
+
+- 响应参数
+```
+参数	说明
+captchaKey	验证码的Key，验证码生成后会缓存，只返回验证码对应的uuid
+message	返回消息，可直接提示给用户
+```
+
+`第二步：前置验证码校验`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014103714621-1322020573.png)
+
+- 请求参数
+```
+参数	说明	必输	类型控制
+captchaKey	上一步得到的验证码 Key	Y	string
+captcha	用户输入的验证码	Y	string
+```
+
+- 响应参数
+```
+参数	说明
+lastCheckKey	验证通过后缓存结果，返回一个UUID代表验证通过
+```
+
+`第三步：向新手机号发送验证码`
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014103843593-1024229278.png)
+
+- 请求参数
+```
+参数	说明	必输	类型控制
+lastCheckKey	上一步得到的验证结果 Key	Y	string
+phone	用户输入的新手机号	Y	string
+```
+
+- 响应参数
+```
+参数	说明
+captchaKey	验证码的Key，验证码生成后会缓存，只返回验证码对应的uuid
+message	返回消息，可直接提示给用户
+```
+
+- 其他
+给新手机号发送验证码的模板：`HIAM.MODIFY_PHONE`
+
+
+`第四步：新手机号验证并修改手机号`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014112012860-742773248.png)
+
+- 请求参数
+```
+参数	说明	必输	类型控制
+phone	用户输入的新手机号	Y	string
+lastCheckKey	第二步得到的验证结果 Key	Y	string
+captchaKey	上一步得到的验证码 Key	Y	string
+captcha	用户输入的验证码	Y	string
+```
+
+- 响应参数
+响应`204` 则代表成功
+
+**通过验证密码修改**<br />
+`第一步：校验原密码`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014112150746-1600081995.png)
+
+```
+参数	说明	必输	类型控制
+password	用户输入的密码	Y	string
+```
+
+- 响应参数
+```
+参数	说明
+lastCheckKey	验证通过后缓存结果，返回一个UUID代表验证通过
+```
+>后续：与 [通过验证手机修改] 方式第三步、第四步一致
+
+
+##### 登录用户-修改邮箱 
+说明：修改邮箱与修改手机流程一致，只是与 phone 相关的接口或参数改为 email 即可。
+
+
+##### Public -用户注册（创建）
+`获取国际冠码`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014113301749-501789957.png)
+
+
+`用户输入密码后，可调用该API检测密码强度(可选)`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014113327970-1148796830.png)
+
+`根据需要校验 手机/邮箱/用户名 是否已注册`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014113400872-235642274.png)
+
+`通过手机注册发送手机验证码，通过邮箱注册则发送邮箱验证码`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014113457387-196926724.png)
+
+
+`用户注册`
+- 如果直接调用IAM服务注册，可直接调用通过手机或邮箱注册用户的接口，这两个接口默认为用户分配平台和游客角色
+- 如果自行做一些处理后在创建用户，可调用内部创建接口，需要自行传入分配的角色编码。
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014132436501-401450513.png)
+
+- 请求参数
+```
+参数	说明	必输	类型控制
+captchaKey	发送验证码时返回的验证码 Key	Y	string
+captcha	用户输入的验证码	Y	string
+type	创建类型	N	仅在内部调用时需传入该参数，手机-phone/邮箱-email
+—	—	—	—
+loginName	登录账号	N	未传则生成默认账号
+email	邮箱	N	邮箱正则：^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*\\.[a-zA-Z0-9]{2,6}$
+organizationId	所属租户	Y	integer
+password	密码	Y	
+realName	真实姓名	Y	
+phone	手机	Y	手机正则：^134[0-8]\\d{7}$\|^13[^4]\\d{8}$\|^14[5-9]\\d{8}$\|^15[^4]\\d{8}$\|^16[6]\\d{8}$\|^17[0-8]\\d{8}$\|^18[\\d]{9}$\|^19[89]\\d{8}$
+internationalTelCode	国际冠码	N	默认+86
+userType	用户类型	N	默认中台用户，中台用户-P/C端用户-C
+startDateActive	有效日期起	N	默认当前时间
+endDateActive	有效日期止	N	
+userSource	用户来源	N	
+birthday	生日	N	
+nickname	昵称	N	
+gender	性别	N	性别, 男-1/女-0
+```
+
+- 如果是内部调用，需自行传入角色参数 `memberRoleList`
+```
+参数	说明	必输	类型控制
+roleCode	角色编码	Y	注意角色编码取 iam_role.code
+assignLevel	分配层	N	租户层-organization/组织层-org，非必须，默认 organization
+assignLevelValue	分配层级值	N	租户层-角色所属租户ID/组织层-组织ID，非必须，默认取角色所属租户ID
+```
+
+##### Public - 找回密码
+`发送验证码：根据需求调用发送手机或邮箱验证码的接口`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014134844288-1287540823.png)
+
+`找回密码`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191014134919127-1233121466.png)
+
+
+##### 定制化
+如果对用户创建流程需要客制化，例如用户信息校验、默认角色分配等，可通过继承如下 Service 个性化开发
+- UserCheckService：用户信息校验服务
+- UserCreateService：创建用户服务
+- UserCreateInternalService：内部调用创建用户服务
+- UserUpdateService：更新用户服务
+- UserRegisterService：注册用户服务
+- UserCaptchaService：用户验证码相关服务
+
+##### 返回码
+```
+phone.format.incorrect	您输入的手机[{0}]格式不正确
+email.format.incorrect	您输入的邮箱[{0}]格式不正确
+captcha.send.interval	请{0}秒后再发送验证码
+captcha.send.time-over	您今天发送验证码的次数已达上限，请{0}小时后再试
+captcha.send.phone	短信验证码已发送至手机:{0}，请在{1}分钟内完成验证
+captcha.send.email	邮件验证码已发送至邮箱:{0}，请在{1}分钟内完成验证
+captcha.validate.overdue	验证码失效，请重新获取
+captcha.validate.number-not-match	与发送验证码的号码不匹配
+captcha.validate.number-not-null	验证码账号不能为空
+captcha.validate.incorrect	您输入的验证码有误，请重新输入
+captcha.validate.error.too-many-time	验证错误次数太多，请重新获取
+captcha.validate.last-check-incorrect	前置验证码校验未通过或已过期，请返回上一步进行验证
+captcha.validate.captcha.notnull	验证码不能为空
+captcha.validate.captcha.incorrect	验证码不正确
+user.validation.phone.exists	您输入的手机号已注册！
+user.validation.username.exists	您输入的账号已注册！
+user.validation.email.exists	您输入的邮箱已注册！
+user.send-captcha.phone.error	您填写的手机号不正确
+user.send-captcha.email.error	您填写的邮箱不正确
+user.validate-password.incorrect	密码错误
+user.validation.tow-password.incorrect	您输入的两次密码不一致
+hiam.warn.user.defaultTenantIncorrect	您选择的租户必须与您的当前租户一致
+hiam.warn.user.notFound	您操作的用户不存在
+hiam.warn.user.assignLeastOneRole	请为新创建的用户分配至少一个有效角色
+hiam.warn.user.siteGuestRoleNotFound	平台层游客角色不存在，请联系管理员
+hiam.warn.user.organizationGuestRoleNotFound	租户层游客角色不存在，请联系管理员
+hiam.warn.user.tenantNotFound	所属租户不存在，请联系管理员
+hiam.warn.user.loginNameExists	您输入的账号已注册，请重新输入
+hiam.error.active_users.reached	有效用户数已达到上限,请联系管理员
+hiam.warn.user.emailFormatIncorrect	您输入的邮箱格式不正确
+hiam.warn.user.phoneFormatIncorrect	您输入的手机格式不正确
+hiam.warn.user.endDateBiggerThenStartDate	有效日期止必须大于有效日期起
+hiam.warn.user.parameterNotBeNull	参数 {0} 不能为空
+hiam.warn.roleNotFoundForCode	角色编码[{0}]对应的角色不存在
+```
+
+
+**登录用户-修改手机** <br />
 **** <br/>
 **** <br/>
 ### Swagger测试服务
