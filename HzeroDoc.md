@@ -2024,8 +2024,32 @@ hiam.warn.user.parameterNotBeNull	参数 {0} 不能为空
 hiam.warn.roleNotFoundForCode	角色编码[{0}]对应的角色不存在
 ```
 
+#### IAM特殊接口介绍
+##### 数据处理及初始化接口
+在新部署环境或升级服务完成后，由于有些数据不是从界面维护，导致某些字段不能自动生成，需调用IAM服务的初始化接口进行一些初始化操作。
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191015140307343-1021739586.png)
+
+- [GET /v1/init/cache-user]
+缓存用户信息到 Redis
+
+- [GET /v1/init/menu-level-path]
+初始化菜单层级路径(h_level_path)，如果发现有些 level_path 不正确，可以直接将本列清掉并调用该接口重新生成。
+
+- [GET /v1/init/role-level-path]
+初始化角色层级路径(h_level_path、h_inherit_level__path)，如果发现有些 level_path 不正确，可以直接将这两列清掉并调用该接口重新生成。
+
+- [GET /v1/init/super-role-permission-sets]
+将权限集分别分配到平台超级管理员和租户超级管理员上。
+
+
+
+##### 权限刷新接口
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191015141818980-868646855.png)
+
 
 **登录用户-修改手机** <br />
+
 **** <br/>
 **** <br/>
 ### Swagger测试服务
