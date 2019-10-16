@@ -2047,22 +2047,370 @@ hiam.warn.roleNotFoundForCode	角色编码[{0}]对应的角色不存在
 ##### 权限刷新接口
 ![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191015141818980-868646855.png)
 
+- [POST /v1/permission/cache/{serviceName}]
+传入服务名，缓存服务权限，此操作会删除缓存中旧的权限，重新刷新。权限缓存到网关服务所在的 Redis database 下，网关默认 redis.database=4，如果修改了此配置，确保在IAM服务中加入 `hzero.service.gateway.redis-db=xx。
 
-**登录用户-修改手机** <br />
+服务报错 PERMISSION_MISSMATCH 错误时，可先检查 Redis 缓存中是否存在访问的API，如果没有可调用此接口手动缓存服务权限。
 
-**** <br/>
-**** <br/>
+- [POST /v1/permission/fresh/{serviceName}]
+刷新 iam_permission 权限表中的数据。如果 iam_permission 中不存在访问的API时，可调用此接口手动刷新服务权限。该接口会自动更新缓存。
+
+此接口有两个参数：serviceName 为服务名；metaVersion 为 swagger 列表中的 version。version 等于服务配置中的 eureka.instance.metadata-map.VERSION。
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016094545057-1847157139.png)
+
+
 ### Swagger测试服务
+#### 简介
+**概述** <br />
+平台开发测试的API文档和调试管理服务
+
+**组件坐标** <br/>
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-swagger</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+**主要功能**  <br />
+- API文档测试
+- 服务API文档刷新
+- API调试
+
+#### 服务配置
+```
+hzero:
+  swagger:
+    # swagger 使用的客户端ID
+    client: client
+    # oauth 服务认证地址，配置此地址才能跳转到 oauth 服务登录认证
+    oauth-url: http://dev.hzero.org:8080/oauth/oauth/authorize
+    # swagger 上不需要显示的服务
+    skip-service: register, gateway, oauth
+    # 网关的地址，不要加 http 前缀
+    gateway-domain: dev.hzero.org:8080
+```
+
+### 平台基础服务（hzero-platform）
+`组件编码 hzero-platform`
+
+#### 简介
+**概述** <br/>
+平台功能基础服务，主要涵盖平台开发支持功能，平台主数据模块、系统管理模块等
+
+**组件坐标** <br/>
+- OP版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>hzero-platform</artifactId>
+	<version>${hzero.service.version}</version>
+</dependency>
+```
+
+- Saas版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>hzero-platform-saas</artifactId>
+	<version>${hzero.service.version}</version>
+</dependency>
+```
+
+`插件坐标`
+HR组织架构(可选用插件)
+- OP版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>platform-hr</artifactId>
+	<version>${hzero.plugin.version}</version>
+</dependency>
+```
+
+- Saas版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>platform-hr-saas</artifactId>
+	<version>${hzero.plugin.version}</version>
+</dependency>
+```
+
+**主数据模块（可选用插件）** <br/>
+- OP版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>platform-mdm</artifactId>
+	<version>${hzero.plugin.version}</version>
+</dependency>
+```
+
+- Saas版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>platform-mdm-saas</artifactId>
+	<version>${hzero.plugin.version}</version>
+</dependency>
+```
+
+`组织信息模块（可选用插件）`
+- OP版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>platform-org</artifactId>
+	<version>${hzero.plugin.version}</version>
+</dependency>
+```
+
+- Saas版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>platform-org-saas</artifactId>
+	<version>${hzero.plugin.version}</version>
+</dependency>
+```
+
+**主要功能** <br/>
+- 系统配置
+- 值列表维护、值列表视图
+- 多语言描述维护
+- 编码规则管理
+- 配置管理
+- 规则引擎
+- 数据源、数据库管理
+
+
+**服务配置管理** <br/>
+```
+hzero:
+  platform:
+    init-cache: ${HZERO_PLATFORM_INIT_CACHE:true} # 是否执行Redis初始化
+    http-protocol: ${HZERO_PLATFORM_HTTP_PROTOCOL:http} # 请求协议，可选值：http，https，用于值集、弹性域、个性化等功能
+    role-template-codes: # 如果角色继承自列表中的角色，那么该角色可以看到分配到列表中角色的卡片
+      - role/organization/default/administrator
+    regist-entity: 
+      enable: true # 开启实体类的注册
+  data:
+    permission:
+      db-owner: ${HZERO_DB_OWNER:} # 数据库所有者模式，例如在MSSQL下数据库前缀拼接规则为：db-prefix.db-owner.table-name
+```
+
+
+### 文件服务
+`服务简码HFLE`
+`默认端口 8100`
+`组件编码 hzero-file`
+
+#### 简介
+
+**概述** <br/>
+对接多种云存储、本地存储的文件管理服务，并能够通过配置，对文件上传进行控制
+
+**组件坐标** <br/>
+
+- OP版本
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-file</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+- Saas版本
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-file-saas</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+
+```
+
+**主要功能** <br />
+- 文件存储配置
+- 文件上传控制
+- 文件汇总查询
+- 文件在线编辑
+- 文件变更记录
+
+**服务配置参数** <br/>
+```
+# 租户允许的最大存储容量,String类型,单位允许MB和KB,   默认值 10240MB  
+hzero.file.maxCapacitySize
+
+# 文件授权url的有效访问时间,Long类型,默认值300L
+hzero.file.defaultExpires
+
+# 华为、百度跨域配置 List<String>  若不设置，表示允许所有跨域
+hzero.file.origins
+
+# 文件预览的方式 String类型 允许的值： aspose  kkFileView  onlyOffice
+hzero.file.previewType
+
+# kkFileView的文件预览地址，previewType为kkFileView时需要指定
+hzero.file.kkFileViewUrl
+```
+
+#### 开发指导
+
+##### onlyOffice文件在线编辑
+**文件在线编辑搭建documentServer**
+
+`使用Docker安装，镜像文件向平台管理员要`
+
+`导入镜像`
+```
+# if file suffix is XXXX.tar.gz
+docker load < hoffice.tar.gz
+
+# if file suffix is XXX.tar
+docker load -i hoffice.tar
+```
+`使用docker-compose创建容器`
+
+`创建docker-compose.yml 文件，内容如下:`
+```
+version: '3'
+services:
+  hoffice:
+    container_name: hoffice
+    image: hoffice:1.2
+    restart: always
+    privileged: true
+    stdin_open: true
+    tty: true
+    ports:
+      - '8000:8000'
+      - '7000:7000'
+    environment:
+      DOC_SERVER: http://127.0.0.1:8000
+    command: /bin/sh -c /root/start.sh
+    volumes:
+      - "./hoffice/logs:/root/documentserver/logs"
+      - "./hoffice/cache:/root/documentserver/server/App_Data"
+```
+
+image中的版本根据实际的镜像版本修改，如hoffice:1.2、hoffice:1.1
+
+
+ports可根据实际情况映射到空闲的端口 DOC_SERVER必须替换为服务器地址，端口与容器中8000端口映射的端口一致，如果使用了代理或https，应设置为代理后的地址 如：通过nginx将hoffice的doc_server服务代理到了 https://www.example.com/hoffice/docserver
+
+则DOC_SERVER应设置为 https://www.example.com/hoffice/docserver
+
+volumes映射的分别为日志文件和缓存文件，如果服务器磁盘不足，可进入容器，执行sh /root/documentserver/shell/clear-cache.sh清除缓存 在docker-compose.yml文件所在目录执行以下命令，创建容器
+
+```
+docker-compose up -d
+```
+`查看Token`
+```
+token用于服务对接时接口的header中携带
+# 进入容器
+docker exec -it hoffice /bin/bash 
+# 查看token
+sh /root/documentserver/shell/token.sh
+```
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016101400527-489249195.png)
+
+如果token出现多个，请使用第一个即可
+
+检测服务是否正常启动，可访问如下地址：
+```
+http://${host}:7000/ // => true
+
+http://${host}:8000/healthcheck // => true
+```
+
+查看日志 容器中的日志文件映射到了当前目录的hoffice/logs下，查看日志的方式如下：
+
+```
+# doc-server日志
+tail -f hoffice/logs/doc-server.log
+# server-manager日志
+tail -f hoffice/logs/server-manager/server-manager-web.log
+# file-converter日志
+tail -f hoffice/logs/file-converter.log
+```
+
+**版本升级** <br/>
+`导入新版本的镜像`
+`修改docker-compose.yml中image的版本号`
+`执行docker-compose up -d重新构建容器`
+`更新应用程序中的token配置`
+
+```
+# 进入容器
+docker exec -it hoffice /bin/bash 
+# 查看token
+sh /root/documentserver/shell/token.sh
+```
+
+**调整服务的配置文件** <br/>
+```
+hzero:
+  file:
+    only-office:
+      token: xxxx   # 上面在容器中查到的token
+      doc-server-url: http://ip:7000/document   # IP为documentServer的服务ip,端口根据实际映射端口调整
+      call-back-prefix: http://xxxxx/hfle/v1/only-office/save # 文件服务提供的回调地址
+```
+
+##### 文件预览配置
+文件服务支持三种文件预览的方式`Aspose.Words for Java`，`kkFileView`和 `onlyOffice`
+
+- onlyOffice 文件预览
+onlyOffice的搭建参考文件在线编辑的说明。
+
+`修改文件服务配置文件`
+```
+hzero:
+  file:
+    preview-type: onlyOffice
+    converter-url: http://xxxxx:8000/converter   # 搭建的onlyOffice，8000端口的那个服务
+```
+>说明： onlyOffice预览方式，支持的文件类型:jpeg jpg png doc docm docx dot dotm dotx epub fodt html mht odt ott pdf rtf txt xpscsv fods ods ots xls xlsm xlsx xlt xltm xltx fodp odp otp pot potm potx pps ppsm ppsx ppt pptm pptx
+>对于复杂的word格式支持不是太好，但大多数格式还是支持的。
+
+- Aspose
+使用Apose需要购买版权，授权文件的放置在文件服务中 classpath:license/license.xml
+
+`修改文件服务配置文件`
+```
+hzero:
+  file:
+    preview-type: aspose
+```
+>说明： 该文件预览方式支持的文件类型较少，目前仅支持：jpeg jpg png doc docx pdf, 但该预览方式对word文件中的一些特殊格式支持很好，对格式要求比较高的推荐使用
+
+- kkFileView
+kkFileView是开源免费的，服务搭建参考[官方文档](https://gitee.com/kekingcn/file-online-preview/wikis/pages)
+
+`服务创建完成后，修改文件服务配置文件`
+```
+hzero:
+  file:
+    preview-type: kkFileView
+    kk-file-view-url: http://xxxxxx:8012/onlinePreview   # kkFileView的文件预览地址
+```
+>说明： kkFileView预览方式支持的文件类型比较多，字体问题在官方文档也有说明。 kkFileView的文件预览是基于openOffice的，对于复杂的word格式支持不是太好，但大多数格式还是支持的。
 **** <br/>
 **** <br/>
 **** <br/>
 **** <br/>
-### 平台基础服务
 **** <br/>
-**** <br/>
-**** <br/>
-**** <br/>
+
+
+
 ### 消息服务
+
 ### 调度服务
 ### 通用导入服务
 ### 接口服务
