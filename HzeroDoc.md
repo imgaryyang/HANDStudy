@@ -2401,19 +2401,207 @@ hzero:
     kk-file-view-url: http://xxxxxx:8012/onlinePreview   # kkFileView的文件预览地址
 ```
 >说明： kkFileView预览方式支持的文件类型比较多，字体问题在官方文档也有说明。 kkFileView的文件预览是基于openOffice的，对于复杂的word格式支持不是太好，但大多数格式还是支持的。
-**** <br/>
-**** <br/>
-**** <br/>
-**** <br/>
-**** <br/>
-
 
 
 ### 消息服务
+`服务简码 HMSG`
+`默认端口 8120`
+`组件编码 hzero-message`
+
+#### 简介
+**概述** <br/>
+支持短信、邮箱、站内消息发送，并能够灵活管理消息模板和对接云平台支持的微服务
+
+**组件坐标** <br/>
+- OP版本
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-message</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+- Saas版本
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-message-saas</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+**主要功能** <br/>
+- 模板管理
+- 短信账户配置
+- 邮箱账户配置
+- 消息发送配置
+
+**服务配置参数** <br />
+```
+# 页面右上角铃铛预览未读消息的数量，默认值5
+hzero.message.maxUnreadMessageCount
+
+# 伪装动作：如果为真则不会发送短信到目标用户，默认值false
+hzero.message.sms.fakeAction
+# 伪装账号
+# 如果有值且fakeAction为真，则所有短信都会被拦截发送至该伪装账号
+# 如果无值且fakeAction为真，则不会发生发送短信的动作，但是会返回发送成功
+hzero.message.sms.fakeAccount
+# 伪装账号的国际冠码，默认值 +86
+hzero.message.sms.fakeIdd
+
+# 伪装动作：如果为真则不会发送邮件到目标用户，默认值false
+hzero.message.sms.fakeAction
+# 伪装账号
+# 如果有值且fakeAction为真，则所有邮件都会被拦截发送至该伪装账号
+# 如果无值且fakeAction为真，则不会发生发送邮件的动作，但是会返回发送成功
+hzero.message.sms.fakeAccount
+```
+
+#### 开发指导
+
+**邮箱账户配置** <br/>
+使用163邮箱时，用户名发送人都要是邮箱账号，邮件才能正常发送
+
+`25端口不可用`
+25端口因为各种原因不可用，需要使用465端口。需要添加服务器配置项
+```
+属性编码	属性值
+mail.smtp.socketFactory.class	javax.net.ssl.SSLSocketFactory
+mail.smtp.socketFactory.port	465
+mail.smtp.ssl.enable	true
+```
+
 
 ### 调度服务
+`服务简码 HSDR`
+`默认端口 8130`
+`组件编码 hzero-scheduler`
+
+#### 简介
+**概述** <br/>
+调度服务是基于Quartz 2.3.0自研的分布式调度平台，服务端负责任务调度，任务的执行由执行器来完成。该服务具体包含执行器管理、并发任务管理、日志管理以及并发请求等。
+
+**组件坐标** <br/>
+- OP版本
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-scheduler</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+- Saas版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+    <artifactId>hzero-scheduler-saas</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+**主要功能** <br/>
+- 执行器管理
+- 调度任务管理
+- 并发可执行
+- 并发请求
+
+**服务配置参数** <br/>
+```
+# 串行任务锁的自动释放时间，默认值300 ，单位秒
+hzero.scheduler.lockTime
+
+# 调度任务告警邮件的发送配置模板编码，默认值：HSDR.SCHEDULER_ALARM
+hzero.scheduler.alarmEmail.messageCode
+```
+
+#### 开发指导
+**quartz配置文件** <br/>
+`quartz集群模式配置文件示例`
+```
+#==============================================================
+#Configure Main Scheduler Properties
+#==============================================================
+org.quartz.scheduler.instanceName = defaultScheduler
+# 调度器编号自动生成，集群中编号不可以重复，所以最好设成auto
+org.quartz.scheduler.instanceId = AUTO
+
+#==============================================================
+#Configure JobStore
+#==============================================================
+org.quartz.jobStore.class = org.quartz.impl.jdbcjobstore.JobStoreTX
+org.quartz.jobStore.driverDelegateClass = org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+org.quartz.jobStore.tablePrefix = QRTZ_
+# 开启分布式部署
+org.quartz.jobStore.isClustered = true
+# 分布式节点有效性检查时间间隔，单位：毫秒
+org.quartz.jobStore.clusterCheckinInterval = 10000
+org.quartz.jobStore.maxMisfiresToHandleAtATime = 10
+# 任务等待时间，单位：毫秒
+org.quartz.jobStore.misfireThreshold = 30000
+org.quartz.jobStore.txIsolationLevelSerializable = true
+# 数据库支持for update操作的尽量使用 SELECT * FROM {0}LOCKS WHERE LOCK_NAME = ? FOR UPDATE
+org.quartz.jobStore.selectWithLockSQL = SELECT * FROM {0}LOCKS WHERE LOCK_NAME = ?
+
+#==============================================================
+#Configure ThreadPool
+#==============================================================
+org.quartz.threadPool.class = org.quartz.simpl.SimpleThreadPool
+org.quartz.threadPool.threadCount = 30
+org.quartz.threadPool.threadPriority = 5
+org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread = true
+
+#==============================================================
+#Skip Check Update
+#update:true
+#not update:false
+#==============================================================
+org.quartz.scheduler.skipUpdateCheck = true
+```
+
+
 ### 通用导入服务
+`服务简码 HIMP`
+`默认端口 8140`
+`组件编码 hzero-import`
+
+#### 简介
+**通用excel导入服务** <br/>
+通用Excel导入服务，支持配置Excel导入模板，上传自动校验规则控制，并插入到数据库等
+
+**组件坐标** <br/>
+- OP版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>hzero-import</artifactId>
+	<version>${hzero.service.version}</version>
+</dependency>
+```
+
+- SaaS版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>hzero-import-saas</artifactId>
+	<version>${hzero.service.version}</version>
+</dependency>
+```
+
+**主要功能** <br/>
+- 模版管理
+- 模板下载
+- 通用上传界面
+- 通用上传封装接口拓展
+
+
 ### 接口服务
+**** <br/>
+**** <br/>
+**** <br/>
+**** <br/>
 ### 数据分发服务
 ### 新版工作流服务
 ### 审计监控服务
