@@ -2202,7 +2202,7 @@ hzero:
 ```
 
 
-### 文件服务
+### 文件服务（hzero-file）
 `服务简码HFLE`
 `默认端口 8100`
 `组件编码 hzero-file`
@@ -2403,7 +2403,7 @@ hzero:
 >说明： kkFileView预览方式支持的文件类型比较多，字体问题在官方文档也有说明。 kkFileView的文件预览是基于openOffice的，对于复杂的word格式支持不是太好，但大多数格式还是支持的。
 
 
-### 消息服务
+### 消息服务（hzero-message）
 `服务简码 HMSG`
 `默认端口 8120`
 `组件编码 hzero-message`
@@ -2474,7 +2474,7 @@ mail.smtp.ssl.enable	true
 ```
 
 
-### 调度服务
+### 调度服务（hzero-scheduler）
 `服务简码 HSDR`
 `默认端口 8130`
 `组件编码 hzero-scheduler`
@@ -2562,7 +2562,7 @@ org.quartz.scheduler.skipUpdateCheck = true
 ```
 
 
-### 通用导入服务
+### 通用导入服务（hzero-import）
 `服务简码 HIMP`
 `默认端口 8140`
 `组件编码 hzero-import`
@@ -2597,26 +2597,2242 @@ org.quartz.scheduler.skipUpdateCheck = true
 - 通用上传封装接口拓展
 
 
-### 接口服务
-**** <br/>
-**** <br/>
-**** <br/>
-**** <br/>
-### 数据分发服务
-### 新版工作流服务
+### 接口服务（hzero-interface）
+`组件编码 hzero-interface`
+
+#### 简介
+**概述** <br/>
+接口平台服务主要提供了服务注册、认证配置、接口透传、协议转换、接口监控、文档配置生成、测试用例、健康状态检查等功能。
+
+**组件坐标** <br/>
+- OP版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>hzero-interface</artifactId>
+	<version>${hzero.service.version}</version>
+</dependency>
+```
+
+- Saas版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>hzero-interface-saas</artifactId>
+	<version>${hzero.service.version}</version>
+</dependency>
+```
+
+**功能特性** <br/>
+`接口配置`
+- 服务注册：注册服务、接口，配置服务级别的认证细腻；以及配置接口的运维信息、文档、测试用例等管理信息
+- 接口能力汇总: 汇总展示平台通用接口能力以及本租户内的接口能力, 并标识自己所拥有的接口能力; 无权限的接口能力可通过接口文档查看接口信息; 有权限的接口能力可配置不同维度的认证信息。
+
+`接口授权`
+- 角色授权：将接口能力授权给角色
+- 客户端授权：将角色授权给客户端
+
+`接口运维`
+- 接口监控：可监控接口调用详情信息
+- 健康状况监控：配置健康检查功能后，可通过此处查看近期健康检查的异常情况。
+
+**前提条件** <br/>
+- 依赖hzero-oauth版本0.8.3以上, 影响客户端授权
+- 依赖hzero-gateway-helper版本0.8.3以上, 影响HZERO API通过客户端方式调用的校验逻辑
+- 依赖hzero-iam前端需要0.8.3以上, 影响HZERO API通过客户端方式调用时的客户端授权
+- 本接口平台发布的Rest API当前仅接受两种Content-Type:
+	- application/json;charset=UTF-8: 目标API无文件类型的参数。
+	- multipart/form-data: 目标API存在文件类型参数的情况
+- 依赖客户端组件 
+```
+<dependency> 
+	<groupId>org.hzero.boot</groupId> <artifactId>hzero-boot-interface</artifactId> <version>${hzero.boot.version}</version> </dependency>
+```
+
+**安装** <br />
+- 首先初始化groovy表结构脚本
+- 其次初始化相关基础数据: 值级、值级视图、菜单、权限集、管理员角色权限等基础数据, 参考hzero-resource
+
+- 运行
+```
+mvn spring-boot:run
+```
+
+**使用** <br />
+- 功能使用：注册服务并授权即可
+- 客户端使用：可通过SDK直接调用平台接口
+
+**约束限制** <br />
+- 测试用例尚不支持目标API携带文件类型参数（SDK支持）
+
+
+### 数据分发服务（hzero-transfer）
+#### 功能特性
+`初始化`
+- 初始化时自动同步表结构
+- 仅初始化表结构
+- 单库历史数据初始化
+
+`同步类型`
+- 单表变更同步
+- 单表批量变更同步
+- 主表+多语言表变更同步
+
+`同步维度`
+- 整张表维度同步
+- 租户维度同步
+
+#### 前提条件
+- 该服务需要提前部署RocketMQ作为消息队列组件
+- 源服务需要安装客户端组件
+
+#### 安装
+```
+mvn spring-boot:run
+```
+
+#### 使用
+`源客户端`
+- 源服务依赖数据分发客户端
+```
+<dependency>
+	<groupId>org.hzero.boot</groupId>
+	<artifactId>hzero-boot-transfer</artifactId>
+	<version>${hzero.boot.version}</version>
+</dependency>
+```
+- 配置客户端启用数据分发
+```
+# application.yml
+hzero:
+transfer:
+monitor:
+  enabled: true # 是否启用数据变更监控功能
+dataTransfer:
+  enabled: true # 是否启用数据变更分发功能
+dataAudit:
+  enabled: true # 是否启用数据变更审计功能
+```
+- 初始化数据分发需要的表结构
+- 生产事件表: hdtt_producer_event, 数据变更消息首先保存至本地事件表
+- 生产事件归档表: hdtt_producer_event_arch, 变更数据同步至服务器端之后的归档
+
+`目标客户端`
+- 初始化目标服务表结构
+- 消费事件表: hdtt_consumer_event, 数据变更消费前首先同步保存至本地消费事件表
+- 消费事件归档表: hdtt_consumer_event_arch, 数据消费成功后归档
+
+`服务器端`
+- 运行RocketMQ
+- 运行本服务, 提供数据分发服务器端支持
+- 配置数据分发基础设置 包括数据分发服务、表、初始化DB信息; 数据消费服务、DB信息、租户信息等。同时, 需要首先做初始化, 初始化后自动启用数据变更消费。
+
+**过程** <br />
+术语: 生产DB、消费DB、主表(正式表)、多语言表(正式表)、临时表、备份表
+
+
+### 新版工作流服务（hzero-workflow-plus）
+`组件编码 hzero-workflow-plus`
+#### 简介
+**概述** <br />
+基于Activiti的工作流引擎服务
+
+**组件坐标** <br />
+- OP版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>hzero-workflow-plus</artifactId>
+	<version>${hzero.service.version}</version>
+</dependency>
+```
+- SAAS版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+	<artifactId>hzero-workflow-plus-saas</artifactId>
+	<version>${hzero.service.version}</version>
+</dependency>
+```
+
+**主要功能** <br />
+在原工作流的基础上整合配置，修复若干Bug，将编辑器和服务整合在一起
+
+**服务配置参数**  <br />
+```
+hzero:
+  workflow:
+    activiti: # 如果没有用到Activiti的Mail组件，该配置可随意配置
+      mail-server-host: ${HZERO_WORKFLOW_MAIL_HOST:stmp.163.com} # 邮件发送服务
+      mail-server-port: ${HZERO_WORKFLOW_MAIL_PORT:25} # 工发送端口
+      mail-server-username: ${HZERO_WORKFLOW_MAIL_USERNAME:hzero@163.com} # 邮件发送账号
+      mail-server-password: ${HZERO_WORKFLOW_MAIL_PASSWORD:hzero} # 邮件发送账号密码
+      database-type: ${DATABASE_TYPE:mysql} # 数据库类型
+      databaseSchemaUpdate: true # 数据库更新模式
+      asyncExecutorActivate: true # 开启异步任务
+      uppercaseTableName: true # 数据库名称大写，针对TiDB数据库名称大小写无法识别的bug做的兼容，一般可不配置
+      requestProtocol: http # 接口定义请求协议，默认http
+    engineUrl: ${HZERO_WORKFLOW_SERVICE_URL:http://dev.hzero.org:8080/hwfp} # 流程编辑器中使用的服务地址，网关地址/工作流服务简码
+```
+
 ### 审计监控服务
+`组件编码 hzero-monitor`
+
+#### 简介
+**概述** <br />
+提供监控审计功能。监控包括服务监控、日志监控、调用链路追踪等监控功能。审计包括数据审计和操作审计。
+
+**组件坐标** <br />
+- OP版本
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-monitor</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+- SaaS版本
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-monitor-saas</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+**功能列表** <br />
+`操作审计`
+```
+hzero:
+  audit:
+    operation:
+      enable: false     # 全局开关，默认 false
+      api-audit:
+        enable: true    # API 审计开关，默认 true，如果全局开关关闭，此值无效
+      annotation-audit:
+        enable: true    # 注解审计（在Bean的方法上添加@OperationalAudit）开关，默认 true，如果全局开关关闭，此值无效
+```
+
+`数据审计`
+```
+# application.yml
+hzero:
+  transfer:
+    monitor:
+      enabled: true # 是否启用数据变更监控功能
+    dataAudit:
+      enabled: true # 是否启用数据变更审计功能
+```
+
+
 ### 报表服务
+`服务简码 HRPT`
+`默认端口 8210`
+`组件编码 hzero-report`
+
+#### 简介
+**概述** <br />
+通过配置数据集，通过SQL查询方式的平面报表、单据报表、图形报表的服务
+
+**组件坐标** <br />
+- OP版本
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-report</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+- Saas版本
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-report-saas</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+**主要功能** <br />
+- 数据集管理
+- 报表定义
+- 报表查询
+- 报表模板管理
+- 其他报表使用的API
+
+**服务配置参数** <br />
+```
+# 生成报表时，每页允许的最大数量，默认值100000
+hzero.report.maxRows
+
+# 字体文件的文件路径
+hzero.report.fontPaths
+
+# 服务使用的文件存储桶的名称
+hzero.report.bucketName
+
+# 服务使用的文件存储文件夹的名称
+hzero.report.outputDirectory
+```
+
+#### 开发指导
+**报表数据隔离** <br />
+sql中可以使用一些预定义参数来获取当前用户的信息，可用于数据隔离
+eg:
+```
+select user_id, name from user where user_id='${u-userId}'  
+```
+
+在数据集管理功能中,以u-开头的自定义参数,不会是被初始化为参数
+以下为所有预定义参数:
+```
+字段名	含义
+u-userId	当前用户Id
+u-language	当前会话语言
+u-roleId	当前角色Id
+u-roleIds	当前会话可访问的角色集合
+u-tenantId	当前租户
+u-tenantIds	当前会话可访问的租户集合
+u-organizationId	所属租户
+```
+
+**定义模板列表** <br />
+- HTML模板 报表的格式要求不高时建议使用此类型模板
+```
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head >
+<meta charset="utf-8" /> 
+<style> 
+	 body{ padding:0; margin:0; font-family:SimHei;} 
+</style>
+</head>
+<body>
+	<table cellpadding="0" cellspacing="0" border="1">
+		<thead>
+			<tr align="center">
+				<th width="300px">公司名称</th>
+				<th width="200px">公司编码</th>
+				<th width="100px">汉得</th>
+				<th width="100px">中台</th>
+				<th width="100px">产品</th>
+			</tr>
+		</thead>
+		#foreach( $elem in $DATA)
+		<tbody>
+			<tr class="hreport-row">
+				<td class="hreport-fixed-column">${elem.COMPANY_NAME}</td>
+				<td class="hreport-fixed-column">${elem.COMPANY_NUM}</td>
+				<td><font color="red" size="5">帅</font></td>
+				<td><font color="green" size="5">到</font></td>
+				<td><font color="blue" size="5">爆</font></td>
+			</tr>
+		</tbody>
+		#end
+	</table>
+</body>
+</html>
+```
+
+- RTF模板 为了简化模板开发,可以安装offic的BI Publisher插件,[下载地址](https://www.oracle.com/technetwork/middleware/bi-publisher/downloads/index.html)
+安装成功后word会新增一个功能如图:
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016134430755-1844325232.png)
+
+```
+1.使用数据集的xml示例功能,获取一个可用的xml数据文件
+2.点击word中的示例XML,导入数据
+3.点击所有字段按钮,即可生成一个最初的rtf模板文件,根据需求调整模板的样式即可
+4.offic提供了预览功能,可以导出多种文件格式
+```
+
+- EXCEL 模板
+EXCEL模板与RTF 模板类似，是在Excel中进行编辑的
+
+需要注意的是: 报表平台的字体默认只支持黑体,若报表打印时,出现乱码,很可能是字体缺失
+用户可以自定义需要的字体:
+1.将所有需要的字体文件上传至报表服务所在服务器
+2.ymal文件中指定字体名称和字体文件的绝对路径
+
+```
+hzero:
+    report:
+        fontPaths:
+      		- 宋体|C:\Windows\Fonts\simsun.ttc
+```
+
 ### 内容提取
+`服务简码 HNLP`
+`默认端口 8230`
+`组件编码 hzero-nlp`
+
+#### 简介
+**概述** <br />
+自然语言提取。
+
+**组件坐标** <br />
+- OP版本
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-nlp</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+- Saas版本
+```
+<dependency>
+	<groupId>org.hzero</groupId>
+    <artifactId>hzero-nlp-saas</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+**主要功能** <br />
+- 基础数据管理
+- 模板管理
+- 词语映射
+- 内容提取测试
+
+**服务配置参数** <br />
+```
+# 文本识别接口
+nlp.python.url: ${NLP_PYTHON_URL:http://python.hzero.org:5000/text_extract}
+# 缓存获取接口
+nlp.python.evict: ${NLP_PYTHON_EVICT:http://python.hzero.org:5000/cache_evict}
+```
+
+#### 部署指导
+**CoreNLP** <br />
+`硬件要求：`
+```
+4GB RAM+
+2 Cores+
+```
+`操作系统:`
+```
+Centos,Ubuntu等linux发行版
+Docker
+```
+`部署命令:`
+```
+docker run --name=corenlp -p 9000:9000 -d registry.saas.hand-china.com/hzero/corenlp:1.0
+```
+容器内监听端口：tcp/9000
+
+**Python NLP** <br />
+`硬件要求：`
+```
+4GB RAM+
+4Cores+
+```
+
+`操作系统:`
+```
+Centos,Ubuntu等linux发行版
+Docker
+```
+`部署镜像：`
+```
+docker run --name=nlp-worker\
+ -p 5000:5000\
+ -d -e CORE_NLP_HOST=http://192.168.11.167\
+ registry.choerodon.com.cn/hzero-hzero/hzero-nlp-worker:0.10.1.RELEASE
+```
+>通过-p指定外部监听端口号，通过-e 指定环境变量参数，具体参数见下表
+容器内监听端口：tcp/5000 也可由WSGI_BIND参数指定
+
+```
+WSGI_WORKERS	WSGI web服务器工作线程数，建议不要超过服务器cpu核心数两倍	4
+WSGI_BIND	Web服务监听端口	0.0.0.0:5000
+CACHE_NUM	内存缓存条目数量，文本识别时所有的内存缓存，根据服务器内存大小调整	60000
+CACHE_TTL	内存缓存失效时间，单位是秒	86400
+CORE_NLP_HOST	CoreNLP服务host地址	http://localhost
+CORE_NLP_PORT	CoreNLP服务端口号	9000
+MONGO_URL	mongodb的url	mongodb://user:passsword@172.20.0.201:27017
+MONGO_DB	mongodb中的数据库名称	hzero_nlp
+REDIS_HOST	redis服务ip	redis.hzero.org
+REDIS_PORT	redis端口号	6379
+REDIS_DB	redis db号	1
+```
+
 ### 即时通讯
+#### 简介
+**概述** <br />
+
+**组件坐标** <br />
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-im</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+**主要功能** <br />
+- 群组管理
+- 好友管理
+- 消息单聊
+- 消息群聊
+
+
 ### 支付服务
+`服务简码 HPAY`
+`默认端口 8250`
+`组件编码 hzero-pay`
+
+#### 简介
+**概述** <br />
+HZERO支付平台，对接了支付宝、微信、银联的支付方式，同时提供额外的支付订单管理与退款订单管理。
+
+**组件坐标** <br />
+- OP版本
+```
+<dependency>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-pay</artifactId>
+    <version>${hzero.service.version}</version>
+</dependency>
+```
+
+**主要功能** <br />
+- 支付配置
+- 支付订单
+- 退款订单
+
+**服务配置参数** <br />
+```
+# 回调地址根路径  例：http://gateway:8080/hpay/v1/
+hzero.pay.callback
+```
+
+#### 开发指导
+**支付宝支付相关** <br />
+- [POST] /v1/{organizationId}/alipay/pay 订单数据支付
+```
+{
+  "paymentAmount": "0.01",                              支付金额
+  "currencyCode": "CNY",                                币种
+  "paymentCustomer": "12345",                           支付客户
+  "paymentSubject": "测试订单",                         商品名称/交易标题/订单标题/订单关键字等
+  "paymentDescription": "测试商品",                     商品名称/交易标题/订单标题/订单描述等
+  "returnUrl":"http://hzerodevf.saas.hand-china.com",   支付完成后返回的页面，若不指定使用支付配置定义的回调地址
+  "merchantOrderNum": "21781782",                       商户支付订单号，单号相同不会创建新订单
+  "channelTrxType": "PC",                               渠道事务类型  PC(网页支付)WAP(手机网站支付)APP(APP支付)BAR(条码支付)
+  "expireTime":"2019-06-20 10:10:10"                    到期时间
+}
+```
+`响应实例`
+```
+{
+    "code": "success",
+    "data": "<form id=\"_alipaysubmit_\" name=\"alipaysubmit\" action=\"https://openapi.alipay.com/gateway.do?app_id=2018110561993668&charset=UTF-8&format=json&method=alipay.trade.page.pay&notify_url=http%3A%2F%2Fhzeronb.saas.hand-china.com%2Fhpay%2Fv1%2F0%2Falipay%2FALIPAY%2Fcallback&return_url=http%3A%2F%2Fhzeronf.saas.hand-china.com&sign=k82GOoztI6SczR8y9JtgQa0ipSCoxqyR%2BMQYgfOMd9wuICViOHj2OfOJ1HgJy1Uz%2F2Qmu8F%2FLsjs4oOr7sIoEhQCW%2FpM4ZVeesS2VBsinEM9l8JSuRNvGPwrUyVHTr2UnrfUr7VeqiOgIQ1vNRG%2F06n%2FeBqMWywRR9XmFz9XCCQrZdT0qEe%2FQT6gJGN8%2BmcZgXifX5LjxJofxupVZ9I%2FZzRMvZOaxw5CB2UAO7w5Q2i%2BbPFbIan1wra%2FeudzTl0klp23FcPTWD6Dt0uNv9s0mV4J%2BZ2QIPS5q9LsLiPZESZeHmWWHJ8CyLNJaFZdQzOQkkxcW81P2AqNpMbMDC%2FJBQ%3D%3D&sign_type=RSA2&timestamp=2019-07-24+11%3A34%3A37&version=1.0\" method=\"post\"><input type=\"hidden\" name=\"biz_content\" value='{\"body\":\"测试商品\",\"out_trade_no\":\"21781783\",\"product_code\":\"FAST_INSTANT_TRADE_PAY\",\"subject\":\"测试订单\",\"total_amount\":\"0.01\"}'/></form><script>document.forms['_alipaysubmit_'].submit();</script>"
+}
+```
+
+前端根据data中的标签渲染即可得到支付页面
+- [GET] /v1/{organizationId}/alipay/pay/{paymentOrderNum} 根据订单号支付
+
+- [POST] /v1/{organizationId}/alipay/pay/qrcode 二维码支付 获取二维码图片
+
+`报文示例`
+```
+{
+  "paymentAmount": "0.01",
+  "currencyCode": "CNY",
+  "paymentCustomer": "12345",
+  "paymentSubject": "支付测试订单",
+  "returnUrl":"http://hzerodevf.saas.hand-china.com",
+  "merchantOrderNum": "21781782",
+  "paymentDescription": "测试支付"
+}
+```
+
+- [POST] /v1/{organizationId}/alipay/pay/micro 刷卡付，pos主动扫码付款(条码付)
+`报文示例：`
+```
+{
+  "paymentAmount": "0.01",
+  "currencyCode": "CNY",
+  "paymentCustomer": "12345",
+  "paymentSubject": "支付测试订单",
+  "returnUrl":"http://hzerodevf.saas.hand-china.com",
+  "merchantOrderNum": "21781782",
+  "paymentDescription": "测试支付"
+}
+```
+
+- [POST] /v1/{organizationId}/alipay/pay/query 支付查询
+`报文示例：`
+```
+{
+  "outTradeNo": "21781782"       商户支付订单号
+}
+```
+
+- [POST] /v1/{organizationId}/alipay/pay/close 请求关闭交易
+`报文示例：`
+```
+{
+  "outTradeNo": "21781782 ",                    商户支付订单号
+  "tradeNo": "2019061222001478271043735658"     支付流水号
+}
+```
+
+- [POST]/v1/{organizationId}/alipay/refund/apply/{paymentOrderNum} 根据订单号申请退款
+
+- [POST] /v1/{organizationId}/alipay/refund 申请退款
+`报文示例`
+```
+{
+  "outTradeNo": "21781782",                     商家支付订单号
+  "refundAmount": 0.01                          退款金额
+}
+```
+
+- [POST] /v1/{organizationId}/alipay/refund/query 查询退款
+
+`报文示例：`
+
+```
+{
+  "outTradeNo": "21781782",                     商家支付订单号
+  "tradeNo": "2019061222001478271043735658",    支付流水号
+  "refundAmount": 0.01,                         退款金额
+  "refundNo": "R02019061319094520800"           退款订单号
+}
+```
+
+- [POST] /v1/{organizationId}/alipay/download-bill 下载对账单
+
+`报文示例：`
+
+```
+{
+"billDate":"2019-06-18 13:56:01",               账单时间：具体请查看对应支付平台
+"billType":"trade"                              账单类型：具体请查看对应支付平台
+}
+```
+>平台记录的订单数据也可用于对账，但不保证数据的绝对准确！！
+
+#### 通用支付
+可以通过channelCode动态指定支付方式， alipay支付宝 wxpay微信 unionpay银联
+
+
 ### 发票服务
-### 前端服务
+`服务简码 HIVC`
+`默认端口 8015`
+`组件编码 hzero-invoice`
+
+#### 简介
+**概述** <br />
+通过传入发票六要素，或者发票图片地址，识别发票结构化信息，并完成发票真实性检查。
+
+**主要功能** <br />
+- 根据发票六要素手工查验发票
+- 根据发票图片识别，并完成发票查验
+
+#### 开发指导
+**服务配置** <br />
+手动查验的订单号，需要向海马汇购买
+```
+hzero:
+  invoice:
+    helios:
+      check-order-no: ${HELIOS_CHECK_ORDER_NO:}
+```
+
+OCR查验的订单号，需要向海马汇购买
+```
+hzero:
+  invoice:
+    helios:
+      ocr-order-no: ${HELIOS_OCR_ORDER_NO:}
+```
+
+查验使用的接口需要定义在hzero接口平台，以下为接口平台的参数： 接口定义的服务编码
+```
+hzero:
+  invoice:
+    interface-config:
+      server-code: ${INTERFACE_SERVER_CODE:}
+```
+
+接口定义，手工查验接口的编码
+```
+hzero:
+  invoice:
+    interface-config:
+      check-interface-code: ${INTERFACE_CHECK_CODE:}
+```
+
+接口定义，ocr查验接口的编码
+```
+hzero:
+  invoice:
+    interface-config:
+      ocr-interface-code: ${INTERFACE_OCR_CODE:}
+```
+>上述配置都是必须的，否则查验功能不能使用。
+
+**发票六要素查验** <br />
+`POST /v1/{organizationId}/invoice/check`
+
+传入参数
+```
+{
+    "invoiceTypeNo": "04",
+    "invoiceCode": "3100164320",
+    "invoiceNo": "59957351",
+    "billingDate": "20190306",
+    "invoiceAmount": 123,
+    "checkCode": "315048"
+}
+```
+
+`参数说明`
+```
+字段名	含义
+invoiceTypeNo	发票类型代码
+invoiceCode	发票代码
+invoiceNo	发票号码
+billingDate	开票日期
+checkCode	校验码后六位
+```
+
+`发票类型解释`
+```
+发票类型代码	类型说明
+01	增值税专用发票
+02	货运运输业增值税专用发票
+03	机动车销售统一发票
+04	增值税普通发票
+10	增值税普通发票(电子)
+11	增值税普通发票(卷式)
+14	通行费发票
+```
+
+`返回参数`
+```
+[
+  {
+    "data": {
+      "beginTime": 0,
+      "billingTime": 0,
+      "checkCode": "string",
+      "checkPlatform": "string",
+      "detail": "string",
+      "deviceNumber": "string",
+      "draweeAddressPhone": "string",
+      "draweeBankAccount": "string",
+      "draweeNo": "string",
+      "endTime": 0,
+      "fee": 0,
+      "feeWithoutTax": 0,
+      "invalidStatus": "string",
+      "invoiceCode": "string",
+      "invoiceGoods": [
+        {
+          "amount": 0,
+          "brandModel": "string",
+          "carType": "string",
+          "certificateNumber": "string",
+          "commodityInspectionNo": "string",
+          "count": "string",
+          "detailNo": "string",
+          "engineNumber": "string",
+          "expenseItem": "string",
+          "frameNumber": "string",
+          "goodsName": "string",
+          "importCertificate": "string",
+          "invoiceUniqueCode": "string",
+          "limitMultiplier": "string",
+          "organizationCode": "string",
+          "passDateFrom": "string",
+          "passDateTo": "string",
+          "placeOfOrigin": "string",
+          "plateNumber": "string",
+          "specificationModel": "string",
+          "taxPrice": 0,
+          "taxRate": "string",
+          "tonnage": "string",
+          "unit": "string",
+          "unitPrice": 0,
+          "vehicleType": "string"
+        }
+      ],
+      "invoiceNo": "string",
+      "invoiceTypeNo": "string",
+      "payee": "string",
+      "payeeAddressPhone": "string",
+      "payeeBankAccount": "string",
+      "payeeNo": "string",
+      "remark": "string",
+      "tax": 0,
+      "taxAuthorityName": "string",
+      "taxAuthorityNo": "string",
+      "taxCertificateNumber": "string",
+      "taxRate": 0,
+      "title": "string",
+      "tollType": "string",
+      "tollZeroTaxFlag": "string",
+      "type": "string"
+    },
+    "error": "string",
+    "errorCode": "string",
+    "error_description": "string",
+    "message": "string",
+    "resultId": 0
+  }
+]
+```
+
+`状态字段`
+```
+字段名	含义
+resultId	查验结果id，存在则表示查验成功
+message	查验结果描述
+errorCode	公共错误码
+```
+
+`发展对象`
+```
+参数名	类型	说明	备注
+beginTime	String	发票的有效期起始时间	无
+endTime	String	发票的有效期截止时间	无
+type	String	发票的类型，如广东增值税普通发票	无
+payee	String	发票的收款方(销售方）	无
+fee	Double	发票价税合计金额	无
+vatInvoiceCurrencyCode	String	增值税发票币种	无
+title	String	发票的抬头	无
+billingTime	String	开票时间，为十位时间戳(utc+8)	无
+invoiceNo	String	发票号码	无
+invoiceCode	String	发票代码	无
+feeWithoutTax	Double	不含税金额	无
+pdfUrl	String	这张发票对应的 PDF_URL	无
+tax	Double	税额,以分为单位	无
+reimburseStatus	String	发票报销状态	无
+draweeNo	String	购方识别号	无
+payeeNo	String	销方识别号	无
+draweeAddressPhone	String	购方地址电话	无
+payeeAddressPhone	String	销方地址电话	无
+draweeBankAccount	String	购方开户行及账号	无
+payeeBankAccount	String	销方开户行及账号	无
+deviceNumber	String	设备号码	无
+invoiceTypeNo	String	发票类型编号	无
+invalidStatus	String	作废标志	无
+checkCode	String	校验码	无
+taxAuthorityName	String	主管税务机关名称	无
+taxAuthorityNo	String	主管税务机关代码	无
+taxCertificateNumber	String	完税凭证号码	无
+remark	String	备注	无
+tollType	String	通行费标志	06-可抵扣通行费，07-不可抵扣通行费
+tollZeroTaxFlag	String	零税率标志	空:非零税率，1:税率栏位显示“免税”，2:税率栏位显示“不征收”，3:零税率
+```
+
+`商品行invoiceGood对象`
+```
+参数名	类型	说明	备注
+invoiceUniqueCode	String	发票code拼接发票号码，一般为发票唯一码	无
+goodsName	String	商品/服务名称	无
+specificationModel	String	规格型号	无
+unit	String	单位	无
+count	String	数量	无
+unitPrice	String	单价	无
+amount	String	金额	无
+taxRate	String	税率	无
+taxPrice	String	税额	无
+organizationCode	String	身份证号码/组织机构代码	无
+vehicleType	String	车辆类型	无
+brandModel	String	厂牌型号	无
+placeOfOrigin	String	产地	无
+certificateNumber	String	合格证号	无
+commodityInspectionNo	String	商检单号	无
+engineNumber	String	发动机型号	无
+frameNumber	String	车架号码	无
+importCertificate	String	进口证明书号	无
+tonnage	String	吨位	无
+limitMultiplier	String	限乘人数	无
+carType	String	车辆类型	无
+plateNumber	String	车牌号	无
+passDateFrom	String	通行日期起	无
+passDateTo	String	通行日期止	无
+detailNo	String	明细编号	无
+
+```
+
+**错误说明** <br />
+`公共错误码`
+```
+errorCode	message	说明
+121800	查验成功，发票一致	无
+121801	超过该张票当天查验次数	无
+121802	发票代码、号码正确，请修改其他参数	无
+121708	参数不能为空	无
+121803	所查发票不存在	无
+121805	超过一年的不能查验	无
+121806	日期当天的不能查验	无
+121807	发票类型不支持	无
+121984	不存在的发票类型	无
+121995	发票类型不能为空	无
+121993	发票代码不能为空	无
+121994	发票代码长度不合法	无
+121996	检验码不能为空	无
+121997	检验码长度不合法	无
+121998	发票号码不能为空	无
+121999	发票号码长度不合法	无
+121980	开票日期不能为空	无
+121981	开票日期格式不合法	无
+121982	开票金额不能为空	无
+126015	开票金额长度不合法	无
+126105	发票代码、号码不规范，请修改后重试！	无
+129999	税局系统不稳定，请稍后再试	无
+120998	无可用订单	无
+```
+
+#### 发票Ocr识别查验
+POST /v1/{organizationId}/invoice/ocr/check
+`传入参数`
+```
+{
+  "imageURL": "string"
+}
+```
+
+`参数说明`
+```
+字段名	含义
+imageURL	图片地址
+```
+
+`返回参数`
+```
+[
+  {
+    "data": {
+      "beginTime": 0,
+      "billingTime": 0,
+      "checkCode": "string",
+      "checkPlatform": "string",
+      "detail": "string",
+      "deviceNumber": "string",
+      "draweeAddressPhone": "string",
+      "draweeBankAccount": "string",
+      "draweeNo": "string",
+      "endTime": 0,
+      "fee": 0,
+      "feeWithoutTax": 0,
+      "invalidStatus": "string",
+      "invoiceCode": "string",
+      "invoiceGoods": [
+        {
+          "amount": 0,
+          "brandModel": "string",
+          "carType": "string",
+          "certificateNumber": "string",
+          "commodityInspectionNo": "string",
+          "count": "string",
+          "detailNo": "string",
+          "engineNumber": "string",
+          "expenseItem": "string",
+          "frameNumber": "string",
+          "goodsName": "string",
+          "importCertificate": "string",
+          "invoiceUniqueCode": "string",
+          "limitMultiplier": "string",
+          "organizationCode": "string",
+          "passDateFrom": "string",
+          "passDateTo": "string",
+          "placeOfOrigin": "string",
+          "plateNumber": "string",
+          "specificationModel": "string",
+          "taxPrice": 0,
+          "taxRate": "string",
+          "tonnage": "string",
+          "unit": "string",
+          "unitPrice": 0,
+          "vehicleType": "string"
+        }
+      ],
+      "invoiceNo": "string",
+      "invoiceTypeNo": "string",
+      "payee": "string",
+      "payeeAddressPhone": "string",
+      "payeeBankAccount": "string",
+      "payeeNo": "string",
+      "remark": "string",
+      "tax": 0,
+      "taxAuthorityName": "string",
+      "taxAuthorityNo": "string",
+      "taxCertificateNumber": "string",
+      "taxRate": 0,
+      "title": "string",
+      "tollType": "string",
+      "tollZeroTaxFlag": "string",
+      "type": "string"
+    },
+    "error": "string",
+    "errorCode": "string",
+    "error_description": "string",
+    "message": "string",
+    "resultId": 0
+  }
+]
+```
+
+`状态字段`
+```
+字段名	含义
+resultId	查验结果id，存在则表示查验成功
+message	查验结果描述
+errorCode	公共错误码
+```
+
+`发票对象`
+同上
 
 
+#### 错误码说明：
+`公共错误码`
+同上
+
+
+### 前端服务（hzero-front）
+`组件编码 hzero-front`
+#### 简介
+**概述** <br />
+hzero 服务前端
+
+**前端服务依赖版本** <br />
+[前端服务依赖源](http://nexus.saas.hand-china.com/content/repositories/hzero-ui/)
+
+```
+hzero-front	1.0.0	公共基础依赖
+hzero-front-runtime	1.0.0	公共脚手架依赖
+hzero-front-hagd	1.0.0	分布式事务模块
+hzero-front-hcnf	1.0.0	配置中心模块
+hzero-front-hdtt	1.0.0	数据分发模块
+hzero-front-hfile	1.0.0	文件服务模块
+hzero-front-hiam	1.0.0	IAM模块
+hzero-front-himp	1.0.0	导入服务模块
+hzero-front-hmsg	1.0.0	消息服务模块
+hzero-front-hpay	1.0.0	支付服务模块
+hzero-front-hpfm	1.0.0	平台服务模块
+hzero-front-hitf	1.0.0	服务注册模块
+hzero-front-hrpt	1.0.0	报表服务模块
+hzero-front-hsdr	1.0.0	调度服务模块
+hzero-front-hsgp	1.0.0	服务治理模块
+hzero-front-hwfp	1.0.0	新版工作流模块
+hzero-front-hnlp	1.0.0	自然语言处理模块
+hzero-front-hmnt	1.0.0	监控审计服务模块
+```
+>注意：hzero-front-hwfl 服务 最新版本为 0.11.1 后续不再维护； hzero-front-hptl 最新版本为0.11.2, 后续不再维护；
+
+**环境变量：** <br />
+```
+变量名	含义	构建后需要替换
+BASE_PATH	部署在子目录时需要改变。 例如 部署在 /demo/ 下; 则该变量的值为 /demo/	是
+CLIENT_ID	hzero 后端进行 OAUTH 认证所需要的客户端参数	是
+API_HOST	请求接口的地址	是
+WEBSOCKET_HOST	websocket 地址	是
+ESLINT	由于在提交的时候已经校验过了 所以这里不执行校验以提升打包速度	否
+PLATFORM_VERSION	系统是OP版还是SAAS版	是
+IM_ENABLE	IM 功能是否启用，默认不启用	否
+IM_WEBSOCKET_HOST	IM WebSocket 地址	否
+```
+>注意：
+>1.  0.11.0及以上版本的 BPM_HOST 和 WFP_EDITOR 两个变量默认使用 API_HOST 配置的值，无需再单独配置。
+
+>2.  IM_ENABLE 环境变量配置 IM 功能是否启用(true/false)，默认是不启用(false)；启用IM功能后，还需配置IM_WEBSOCKET_HOST 设置 websocket地址，才能正常使用IM功能。
 
 
 ## 部署配置
+HZERO平台的服务清单，安装部署步骤及相关指导。
 
+### 服务创建
+#### 前端项目快速创建
+HZERO 微服务应用开发平台链接：http://hzero.saas.hand-china.com/
+
+**创建项目** <br />
+- 输入字段：
+	- 前端版本: 指定对应前端的大版本号
+	- 项目名: 项目的名字(不能为hzero, 必须为小写字母及中划线), 下载下来的文件名为 项目名-front
+    - 新服务名: 指定一个新的服务名, 服务名必须为4位小写字母 且不能以 h开头, 如需以h开头, 需设置为5个字母(包含h)
+	- HZERO服务: 需要依赖的 hzero 平台服务, 默认当前版本全部选中
+	- 覆盖HZERO服务: 需要覆盖的 平台的服务, 下载后为空服务, 需要去覆盖对应的路由来覆盖平台服务; eg 选中 用户管理(hzero-front-hiam), 创建的服务为 srm-front-hiam
+
+
+- 2.修改完成后，点击导出文件按钮，即可导出zip包，解压后项目基本不需任何手动处理即可启动测试。
+生成的代码结构 
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016150953986-254119077.png)
+
+**服务部署** <br />
+前端部署及启动请参考 [开始](http://hzerodoc.saas.hand-china.com/zh/docs/development-specification/font-development-specification/start/)
+
+#### 创建前端项目
+##### 环境变量
+- node.js: v10.x or v8.x(>= v8.10)
+- yarn: 推荐使用yarn管理本项目
+```
+npm install --global yarn 
+```
+>关于yarn请参考 https://yarnpkg.com
+
+- lerna: 用于管理具有多个package的JavaScript项目的工具。
+```
+npm install --global lerna
+or
+yarn global add lerna
+```
+- hzero-front-cli: HZERO Front客户端工具,用于创建/更新基于HZERO Front的客户端工具
+
+- HZERO Front npm源地址: http://nexus.saas.hand-china.com/content/groups/hzero-npm-group/
+
+**安装HZERO Front客户端工具: hzero-front-cli** <br />
+```
+npm install -g hzero-front-cli --registry=http://nexus.saas.hand-china.com/content/groups/hzero-npm-group/
+```
+
+安装完成后执行如下命令即可查看HZERO Front客户端工具(hzero-front-cli)的相关命令
+```
+hzero-front-cli -h
+```
+
+##### 创建项目
+```
+# 命令格式如下
+# hzero-front-cli <project name>
+
+# 例如:
+$ hzero-front-cli hzero-front-demo
+```
+由于HZERO Front默认使用了puppeteer Chrome DevTools工具,所以在安装过程中会自动下载Chromium相关,所以可以执行如下命令
+
+使用hzero-front-cli的辅助命令
+```
+# hzero-front-cli <project name> --puppeteer-skip
+$ hzero-front-cli hzero-front-demo --puppeteer-skip
+```
+
+##### 新建目录结构
+```
+.
+├── README.md                                                   # 项目说明文档
+├── config                                                      # 项目基本配置,包含webpakc相关/路由相关/测试相关/样式相关
+│   ├── alias.js                                                # webpack.config别名alias配置
+│   ├── env.js                                                  # node.js环境变量配置
+│   ├── jest                                                    # jest单元测试工具配置文件
+│   │   ├── cssTransform.js
+│   │   └── fileTransform.js
+│   ├── paths.js                                                # 静态文件路径配置文件
+│   ├── routers.js                                              # 项目菜单路由配置文件
+│   ├── theme.js                                                # 默认样式配置文件
+│   ├── webpack.config.js                                       # webpack默认配置文件
+│   ├── webpack.dll.config.js                                   # webpack dll插件配置文件
+│   └── webpackDevServer.config.js                              # webpack dev server开发者模式配文件
+├── dll                                                         # webpack dll静态资源输出目录
+│   └── ...
+├── lerna.json                                                  # lerna多package JavaScript项目管理配置文件
+├── mock                                                        # mock静态数据服务配置相关
+│   └── index.js
+├── package.json                                                # 本项目配置node.js 配置文件
+├── packages
+├── public                                                      # 公共静态资源目录
+│   ├── ...
+│   └── index.html                                              # 本项目主页面html文件
+├── scripts
+│   ├── build.js                                                # 生产环境编译脚本文件
+│   ├── start.js                                                # 项目开发者模式dev server启动脚本文件
+│   └── test.js                                                 # 单元测试脚本工具
+├── src
+│   ├── index.js                                                # 项目入口文件
+│   ├── index.less                                              # 项目全局样式
+│   ├── models                                                  # 项目数据模型
+│   │   └── global.js                                           # 全局数据模型
+│   ├── router.js                                               # 路由管理逻辑文件
+│   ├── routes                                                  # 项目核心业务逻辑/页面 
+│   │   └── index.js                                            # 页面入口文件
+│   ├── serviceWorker.js                                        # 静态缓存service worker
+│   ├── setupProxy.js                                           # mock静态数据代理服务器配置文件
+│   └── utils                                                   # 项目业业务逻辑通用方法 
+│       ├── getModuleRouters.js                                 # hzero-front相关模块依赖注册
+│       └── router.js                                           # 路由控制逻辑文件
+└── yarn.lock                                                   # 项目yarn node.js模块配置文件 
+```
+##### 启动项目
+请确保dll静态资源已编译完成,否则请执行如下命令
+```
+$ yarn build:dll
+```
+>请注意dll无需频繁编译,若有新的依赖安装,且需要加入config/webpack.dll.config.js配置中,则需要重新编译dll
+
+执行如下命令即可启动项目
+```
+$ yarn start
+```
+>启动成功后,请访问如下地址即可     http://localhost:8000
+```
+cross-env BASE_PATH=/ CLIENT_ID=localhost BPM_HOST=http://192.168.12.103:8330 API_HOST=http://hzeronb.saas.hand-china.com WEBSOCKET_HOST=ws://172.20.0.202:8260 HARD_SOURCE=none node --max_old_space_size=4096 ./node_modules/roadhog/bin/roadhog.js dev
+```
+
+start 会设置几个环境变量, 您可以改变他们来适应自己的项目
+```
+BASE_PATH: 部署在子目录时需要改变。 例如 部署在 /demo/ 下; 则该变量的值为 /demo/
+CLIENT_ID: 是hzero后端所需要的客户端参数
+BPM_HOST: 工作流的接口地址
+API_HOST: 请求接口的地址
+WEBSOCKET_HOST: websocket 地址
+```
+#### 下载压缩包之后 执行命令 运行项目
+
+```
+npm install or yarn add ./packagejson  安装依赖
+yarn --registry http://nexus.saas.hand-china.com/content/groups/hzero-npm-group/
+
+yarn build:dll
+
+yarn transpile:prod
+
+yarn start
+```
+
+#### 初始化项目
+执行如下命令即可重新安装项目依赖
+```
+$ yarn --registry http://nexus.saas.hand-china.com/content/groups/hzero-npm-group/
+```
+请注意npm源地址
+
+若使用了lerna工具管理packages,则需要为packages安装依赖,在项目根目录下执行如下命令
+```
+$ lerna bootstrap --registry http://nexus.saas.hand-china.com/content/groups/hzero-npm-group/
+```
+关于lerna请参考 https://lernajs.io/    关于lerna在HZERO Front/基于HZERO Front的项目中的使用请参考lerna
+
+
+##### 发布生产环境
+请确保dll已编译完成,然后执行如下命令
+```
+$ yarn build
+```
+
+编译完成后在项目根目录下生成静态文件
+```
+/dist
+```
+
+接下来您可以将该静态文件用于nginx/node.js serve/docker等服务器部署
+
+build 会设置几个环境变量, 您可以改变他们来适应自己的项目。
+
+
+#### 后端项目快速创建 看下面的部分
+# Hzero搭建过程
+## 1 前提条件
+### 1.1 后端条件
+```
+开发工具
+Git
+JDK 1.8.0 及以上
+maven 3.3 及以上
+Docker
+IDE
+Mysql
+Redis
+```
+
+#### IDEA配置的注意事项
+```
+	菜单栏File > Setting打开设置， Editor > Code Style > Line separator (for new lines): Unix and OS X (n).
+	确保idea使用utf-8编码.
+	安装Docker插件。在File-Settings-Plugins中，搜索Docker integration，点击Install安装，并重启软件加载插件.
+	IDEA中配置Docker，在File-Settings-Build，Execution，Deployment-Clouds中，点击加号新建，会自动读取docker信息，直接保存即可.
+	安装 Lombok 插件，在File-Settings-Plugins中，搜索Lombok，点击Install安装，并重启软件加载插件.
+```
+
+#### 其他软件安装
+- 通过docker 启动镜像
+```
+在本地创建docker-compose的运行路径
+编写docker-compose.yaml 文件
+打开git bash 执行docker-compose up -d
+执行docker ps 或docker-compose ps 查看容器是否启动
+
+```
+
+`mysql_db.cnf`
+```
+# mysql_db.cnf
+[mysqld]
+lower_case_table_names=1
+character_set_server=utf8
+max_connections=500
+```
+
+`init_user.sql`
+```
+/** init_user.sql */
+CREATE USER 'hzero'@'%' IDENTIFIED BY "hzero";
+CREATE DATABASE IF NOT EXISTS hzero_platform DEFAULT CHARACTER SET utf8;
+CREATE DATABASE IF NOT EXISTS hzero_governance DEFAULT CHARACTER SET utf8;
+GRANT ALL PRIVILEGES ON hzero_platform.* TO choerodon@'%';\
+GRANT ALL PRIVILEGES ON hzero_governance.* TO choerodon@'%';\
+FLUSH PRIVILEGES;
+```
+
+`docker-compose.yaml`
+```
+# docker-compose.yaml
+version: "3"
+services:
+  mysql:
+    container_name: mysql
+    hostname: mysql
+    image: registry.cn-hangzhou.aliyuncs.com/choerodon-tools/mysql:5.7.17
+    ports:
+    - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+    - ./mysql/mysql_data:/var/lib/mysql
+    - ./mysql/mysql_db.cnf:/etc/mysql/conf.d/mysql_db.cnf
+    - ./mysql/init_user.sql:/docker-entrypoint-initdb.d/init_user.sql
+    expose:
+    - "3306"
+    networks:
+    - "c7nNetwork"
+  redis:
+    container_name: redis
+    hostname: redis
+    image: redis:4.0.11
+    ports:
+    - "6379:6379"
+    expose:
+    - "6379"
+    networks:
+    - "c7nNetwork"
+networks:
+  c7nNetwork:
+    driver: bridge
+```
+>停止容器通过命令docker-compose down。
+
+
+### 1.2 前端条件
+[Hzero官方前端环境Linux配置文档](http://hzerodoc.saas.hand-china.com/zh/docs/development-guide/front-develop-guid/develop-env/)
+
+```
+Git
+Node.js 推荐v10.x版本，或者 >v8.10.x版本
+yarn
+eslint
+hzero-front-cli
+```
+
+#### 安装工具的命令
+```
+sudo apt-get update && sudo apt-get install yarn
+yarn -v
+
+npm install eslint -g
+或者yarn global add eslint
+eslint -v
+
+npm install -g hzero-front-cli --registry=http://nexus.saas.hand-china.com/content/groups/hzero-npm-group/
+```
+
+
+#### 安装NodeJS的一些问题
+`这里注意需要建立软连接`
+```
+cd /home/legend/software
+tar xf node-v10.16.3-linux-x64.tar.gz nodejs #这里是将解压后的文件名字改为了nodejs
+ln -s /home/legend/software/nodejs/bin/npm /usr/local/bin/ 
+ln -s /home/legend/software/nodejs/bin/node /usr/local/bin/
+
+npm -v
+node -v
+```
+
+![](https://img2018.cnblogs.com/blog/1231979/201909/1231979-20190901102117498-1649508586.png)
+
+-----
+
+## 2. HZero项目创建
+
+[推荐使用hzero项目图形化界面创建](http://hzero.saas.hand-china.com/frontCreate/)
+
+### 2.1 前端项目创建
+![](https://img2018.cnblogs.com/blog/1231979/201909/1231979-20190901103902239-1933790397.png)
+
+#### 前端项目运行过程
+```
+解压下载的压缩包
+
+运行以来安装 yarn add package.json 会报错,可以使用 yarn install 来安装
+
+运行 yarn build:dll 编译静态资源文件
+
+运行项目 yarn start
+
+http://localhost:8000
+```
+
+
+#### 修改的参数
+```
+start 会设置几个环境变量, 您可以改变他们来适应自己的项目
+BASE_PATH: 部署在子目录时需要改变。 例如 部署在 /demo/ 下; 则该变量的值为 /demo/
+CLIENT_ID: 是hzero后端所需要的客户端参数
+BPM_HOST: 工作流的接口地址
+API_HOST: 请求接口的地址
+WEBSOCKET_HOST: websocket 地址
+```
+
+#### 错误截图
+![](https://img2018.cnblogs.com/blog/1231979/201909/1231979-20190901095247591-73158127.png)
+>没有编译静态资源文件 运行  yarn build:dll
+
+
+### 2.2 命令行创建前端项目
+[文档命令创建项目]((http://hzerodoc.saas.hand-china.com/zh/docs/development-specification/font-development-specification/start/))
+
+```
+# 创建新项目
+#hzero-front-demo 为新项目名称，--puppeteer-skip 为省略非必需的 puppeteer 依赖的下载
+hzero-front-cli hzero-front-demo --puppeteer-skip
+
+# 创建主模块 hzero-front-demo, 项目 hzero-front-demo
+cd hzero-front-demo
+hzero-front-cli . --create-packages 'hzero-front-demo'
+
+# 创建其他模块 spfm-front-sslm
+hzero-front-cli . --create-packages 'hzero-front-demo2'
+yarn start
+```
+
+
+### 2.3 后端环境搭建以及项目创建
+#### 先维护本机的host文件
+```
+192.168.xx.xxx db.hzero.org
+192.168.xx.xxx redis.hzero.org
+192.168.xx.xxx dev.hzero.org
+```
+
+[查看后端开发指南操作](http://hzerodoc.saas.hand-china.com/zh/docs/development-guide/backend-develop-guid/)
+
+
+#### 第一种:创建基于HZERO平台图像化界面创建项目
+![](https://img2018.cnblogs.com/blog/1231979/201909/1231979-20190901114026532-1587191082.png)
+
+
+#### 第二种:创建Maven项目单独配置
+```
+mkdir -p hzero-todo-service
+cd hzero-todo-service
+```
+
+`添加项目依赖`
+- 添加POM.xml   touch pom.xml
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--hzero-parent dependency-->
+    <parent>
+        <groupId>org.hzero</groupId>
+        <artifactId>hzero-parent</artifactId>
+        <version>0.10.0.RELEASE</version>
+    </parent>
+    <artifactId>hzero-todo-service</artifactId>
+
+    <dependencies>
+        <!--hzero-->
+        <dependency>
+            <groupId>org.hzero.starter</groupId>
+            <artifactId>hzero-starter-core</artifactId>
+        </dependency>
+
+        <!-- undertow -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-undertow</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- config client -->
+        <dependency>
+            <groupId>io.choerodon</groupId>
+            <artifactId>choerodon-starter-config-client</artifactId>
+        </dependency>
+        <!-- swagger -->
+        <dependency>
+            <groupId>io.choerodon</groupId>
+            <artifactId>choerodon-starter-swagger</artifactId>
+        </dependency>
+
+        <!--resource server-->
+        <dependency>
+            <groupId>io.choerodon</groupId>
+            <artifactId>choerodon-starter-oauth-resource</artifactId>
+        </dependency>
+    </dependencies>
+
+	<repositories>
+            <repository>
+            <id>HzeroRelease</id>
+            <name>Hzero-Release Repository</name>
+            <url>http://nexus.saas.hand-china.com/content/repositories/Hzero-Release/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>HzeroSnapshot</id>
+            <name>Hzero-Snapshot Repository</name>
+            <url>http://nexus.saas.hand-china.com/content/repositories/Hzero-Snapshot/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+</project>
+```
+
+
+- 添加默认配置文件(根目录执行)
+```
+mkdir -p src/main/java
+mkdir -p src/main/resources
+```
+
+- 在resource文件夹中创建 application.yml, bootstrap.yml
+```
+cd src/main/resources
+touch application.yml
+touch bootstrap.yml
+```
+>bootstrap.yml: 存放不会通过环境变量替换和必须在bootstrap中指定的变量。包括项目端口，应用名，hzero-config地址等
+ 
+ >application.yml: 存放项目的基础配置，包含默认的线上数据库连接配置，注册中心地址等，这些变量可以通过profile或者环境变量修改。
+
+`二者区别：bootstrap.yml 在程序引导时执行，应用于更加早期配置信息读取，如可以配置application.yml中使用到参数。application.yml 是应用程序特有配置信息，可以用来配置后续各个模块中需使用的公共参数等。bootstrap.yml 先于 application.yml 加载。`
+
+
+` bootstrap.yml`
+```
+server:
+  # 服务端口
+  port: 8088
+management:
+  server:
+    # 监控管理端口
+    port: 8089
+  endpoints:
+    web:
+      exposure:
+        # 需要开放的 Actuator 监控端点，默认开放所有
+        include: '*'
+
+spring:
+  application:
+    name: hzero-todo-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:default}
+  cloud:
+    config:
+      fail-fast: false
+      # 是否启用配置中心
+      enabled: ${SPRING_CLOUD_CONFIG_ENABLED:false}
+      # 配置中心地址
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://dev.hzero.org:8010}
+      retry:
+        # 最大重试次数
+        maxAttempts: 6
+        multiplier: 1.1
+        # 重试间隔时间
+        maxInterval: 2000
+      # 标签
+      label: ${SPRING_CLOUD_CONFIG_LABEL:}
+    inetutils:
+      # 本地多网卡时，忽略回环网卡
+      ignored-interfaces[0]: lo
+      # 本地多网卡时，选择注册的网段
+      preferred-networks[0]: 192.168
+```
+
+`application.yml`
+```
+# 日志配置
+logging:
+  level:
+    org.hzero: ${LOG_LEVEL:debug}
+    org.apache.ibatis: ${LOG_LEVEL:debug}
+    io.choerodon: ${LOG_LEVEL:debug}
+```
+
+- 编写TodoApplication类
+```
+mkdir -p src/main/java/org/hzero/todo
+touch src/main/java/org/hzero/todo/TodoApplication.java
+```
+
+`TodoApplication.java`
+```
+package org.hzero.todo;
+
+import io.swagger.annotations.ApiOperation;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import io.choerodon.core.iam.ResourceLevel;
+import io.choerodon.resource.annoation.EnableChoerodonResourceServer;
+import io.choerodon.swagger.annotation.Permission;
+
+@SpringBootApplication
+@RestController
+// 开启资源认证、关闭 Security 安全认证
+@EnableChoerodonResourceServer
+public class TodoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(TodoApplication.class, args);
+    }
+
+    @GetMapping
+    @Permission(level = ResourceLevel.SITE, permissionPublic = true)
+    @ApiOperation(value = "demo")
+    public ResponseEntity<String> hello() {
+        return new ResponseEntity<>("hello hzero!", HttpStatus.OK);
+    }
+}
+```
+
+- 根目录下执行  mvn clean spring-boot:run   启动项目
+![](https://img2018.cnblogs.com/blog/1231979/201909/1231979-20190901115127830-803452541.png)
+
+`浏览器输出两个信息,一个简单的Spring boot 应用就已经搭建成功`
+![](https://img2018.cnblogs.com/blog/1231979/201909/1231979-20190901115539065-562633198.png)
+
+![](https://img2018.cnblogs.com/blog/1231979/201909/1231979-20190901115650298-588257519.png)
+
+### 2.4 初始化数据库
+##### 创建用户
+```
+CREATE USER 'hzero'@'%' IDENTIFIED BY "hzero";
+```
+
+#### 创建数据库
+```
+CREATE DATABASE todo_service DEFAULT CHARACTER SET utf8;
+GRANT ALL PRIVILEGES ON todo_service.* TO hzero@'%';
+FLUSH PRIVILEGES;
+```
+>用户创建成功之后，创建项目对应的数据库，并将新创建的数据库权限赋予用户。
+
+#### 编写表结构对应的groovy脚本
+```
+mkdir -p src/main/resources/script/db
+cd src/main/resources/script/db
+touch todo_user.groovy todo_task.groovy
+```
+
+`todo_user.groovy`
+```
+package script.db
+
+databaseChangeLog(logicalFilePath: 'todo_user.groovy') {
+    changeSet(id: '2018-11-20-todo_user', author: 'your.email@email.com') {
+        createTable(tableName: "TODO_USER") {
+            column(name: 'ID', type: 'BIGINT UNSIGNED', remarks: 'ID', autoIncrement: true) {
+                constraints(primaryKey: true)
+            }
+            column(name: 'EMPLOYEE_NAME', type: 'VARCHAR(32)', remarks: '员工名')
+            column(name: 'EMPLOYEE_NUMBER', type: 'VARCHAR(32)', remarks: '员工号') {
+                constraints(unique: true)
+            }
+            column(name: 'EMAIL', type: 'VARCHAR(32)', remarks: '邮箱')
+
+            column(name: "OBJECT_VERSION_NUMBER", type: "BIGINT", defaultValue: "1")
+            column(name: "CREATED_BY", type: "BIGINT", defaultValue: "-1")
+            column(name: "CREATION_DATE", type: "DATETIME", defaultValueComputed: "CURRENT_TIMESTAMP")
+            column(name: "LAST_UPDATED_BY", type: "BIGINT", defaultValue: "-1")
+            column(name: "LAST_UPDATE_DATE", type: "DATETIME", defaultValueComputed: "CURRENT_TIMESTAMP")
+        }
+    }
+}
+```
+
+
+`todo_task.groovy`
+```
+package script.db
+
+databaseChangeLog(logicalFilePath: 'todo_task.groovy') {
+    changeSet(id: '2018-11-20-todo_task', author: 'your.email@email.com') {
+        createTable(tableName: "TODO_TASK") {
+            column(name: 'ID', type: 'BIGINT UNSIGNED', remarks: 'ID', autoIncrement: true) { constraints(primaryKey: true) }
+            column(name: 'EMPLOYEE_ID', type: 'BIGINT', remarks: '员工ID') { constraints(nullable:"false") }
+            column(name: 'STATE', type: 'VARCHAR(30)', remarks: '状态') { constraints(nullable:"false") }
+            column(name: 'TASK_NUMBER', type: 'VARCHAR(60)', remarks: '任务编号') { constraints(unique: true, nullable:"false") }
+            column(name: 'TASK_DESCRIPTION', type: 'VARCHAR(240)', remarks: '任务描述')
+            column(name: 'TENANT_ID', type: 'BIGINT', remarks: '租户ID') { constraints(nullable:"false") }
+            column(name: "OBJECT_VERSION_NUMBER", type: "BIGINT", defaultValue: "1")
+            column(name: "CREATED_BY", type: "BIGINT", defaultValue: "-1")
+            column(name: "CREATION_DATE", type: "DATETIME", defaultValueComputed: "CURRENT_TIMESTAMP")
+            column(name: "LAST_UPDATED_BY", type: "BIGINT", defaultValue: "-1")
+            column(name: "LAST_UPDATE_DATE", type: "DATETIME", defaultValueComputed: "CURRENT_TIMESTAMP")
+        }
+    }
+}
+```
+
+#### 初始化表结构
+```
+touch init-local-database.sh
+```
+
+`init-local-database.sh`
+```
+#!/bin/bash
+version="0.10.0.RELEASE"
+mkdir -p tool-jar
+if [ ! -f bin/choerodon-tool-liquibase.jar ]
+then
+    curl https://oss.sonatype.org/content/groups/public/io/choerodon/choerodon-tool-liquibase/${version}/choerodon-tool-liquibase-${version}.jar -o ./tool-jar/choerodon-tool-liquibase.jar
+fi
+java -Dspring.datasource.url="jdbc:mysql://db.hzero.org:3306/todo_service?useUnicode=true&characterEncoding=utf-8&useSSL=false" \
+ -Dspring.datasource.username=hzero \
+ -Dspring.datasource.password=hzero \
+ -Ddata.drop=false -Ddata.init=true \
+ -Ddata.dir=./src/main/resources \
+ -jar ./tool-jar/choerodon-tool-liquibase.jar
+```
+
+>根目录执行   sh ./init-local-database.sh,注意:如果没有配置hosts文件可能会报错,我是改成127.0.0.1 才运行成功的
+
+![](https://img2018.cnblogs.com/blog/1231979/201909/1231979-20190901190703807-893765450.png)
+
+![](https://img2018.cnblogs.com/blog/1231979/201909/1231979-20190901190829784-205673635.png)
+
+![](https://img2018.cnblogs.com/blog/1231979/201909/1231979-20190901190924266-1248616615.png)
+
+
+### 2.5 应用开发流程
+#### 修改项目数据库配置
+`修改pom.xml文件增加操作数据库的依赖`
+```
+<dependency>
+    <groupId>org.hzero.starter</groupId>
+    <artifactId>hzero-starter-mybatis-mapper</artifactId>
+</dependency>
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+</dependency>
+```
+
+`application.yml 文件中添加数据库连接信息`
+```
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://db.hzero.org:3306/todo_service?useUnicode=true&characterEncoding=utf-8&useSSL=false}
+    username: ${SPRING_DATASOURCE_USERNAME:hzero}
+    password: ${SPRING_DATASOURCE_PASSWORD:hzero}
+
+# MyBatis Mapper 扫描
+mybatis:
+  mapperLocations: classpath*:/mapper/*.xml
+  configuration:
+    mapUnderscoreToCamelCase: true
+```
+![](https://img2018.cnblogs.com/blog/1231979/201909/1231979-20190901191617489-2035338086.png)
+
+`根目录执行  mvn clean spring-boot:run`
+![](https://img2018.cnblogs.com/blog/1231979/201909/1231979-20190901191955723-1097491328.png)
+
+#### 开发功能步骤
+>此 demo 需涉及到 domain 层的 entity、多 entity 的 service、repository 接口类以及 infra 层的 repository 实现类.
+
+- 编写domain-领域模型层
+	- 编写entity 实体规范
+```
+1.实体继承 AuditDomain,AuditDomain包含标准的审计字段
+
+2.使用@Table (javax.persistence.Table) 映射表名
+
+3.使用 @ModifyAudit 注解标明在更新数据时需要更新 lastUpdateDate、lastUpdatedBy 两个审计字段
+
+4.使用 @VersionAudit 注解标明在更新数据时需要更新版本号 objectVersionNumber
+
+5.使用 @ApiModel 注解说明实体含义,在实体类上使用该注解,在 Swagger 文档上就可以看到实体说明。
+
+6.实体主键使用 @Id(javax.persistence.Id)注解标注
+
+7.对于自增张、序列（SEQUENCE）类型的主键,需要添加注解 @GeneratedValue.序列命名规范：表名_S.例如：表SYS_USER对应的序列为 SYS_USER_S.
+
+8.非数据库字段使用 @Transient 注解标注，如果页面用到的非数据库字段比较多，建议使用 DTO 封装数据。
+
+9.所有属性均为private属性,每一个属性需要生成对应的 getter、setter 方法
+
+10.字段名称应根据驼峰命名规则从数据库列名转换过来。例如：数据库列名为 USER_NAME ，则字段名为 userName，特殊字段名称，可以在字段在添加 @Column(name = "xxx")注解，指定数据库列名。
+
+11.不使用基本类型,全部使用基本类型的包装类,如 Long 对应数据库中的 INTEGER,而不是使用 long.不然在数据转换的时候会报错空指针异常.
+
+12.数字类型主键统一采用 Long,金额、数量 等精度严格浮点类型采用 BigDecimal (注意：BigDecimal 在计算、比较方面的特殊性)
+
+13.实体中可以包含一些实体自治的方法，这些方法通常用于对本身的属性做一些计算、操作等
+```
+
+
+- 编写infra-基础设施层
+- 编写app-应用层
+- 编写api-展现层
+- 运行测试
+
+
+### 服务部署
+#### 服务本地安装
+##### 基础环境安装
+**安装清单** <br />
+```
+组件	描述	版本
+JDK	Java运行环境	1.8.0_172
+Nginx	前端代理	1.8.1
+Node	JavaScript 运行环境	10.15.0
+Docker	应用容器引擎	18.09.0
+Docker-Compose	Docker容器编排	1.23.2
+Git	源码管理	2.9.4
+Maven	项目构建	3.3.9
+```
+
+**yum 源更新** <br />
+- 进入源目录：cd /etc/yum.repos.d/
+- 下载163源：wget http://mirrors.163.com/.help/CentOS6-Base-163.repo
+- 把文件里面的`$releasever全部替换为版本号6：sed -i 's#$releasever#6#g' CentOS6-Base-163.repo`
+- 清除原有缓存：yum clean all
+- 重建缓存，以提高搜索安装软件的速度：yum makecache
+- 更新系统：yum update
+- gcc等环境安装，后续有些软件安装需要这些基础环境
+
+```
+gcc安装：yum install gcc-c++
+PCRE pcre-devel 安装：yum install -y pcre pcre-devel
+zlib 安装：yum install -y zlib zlib-devel
+OpenSSL 安装：yum install -y openssl openssl-devel
+```
+
+**Nginx** <br />
+- 准备nginx：
+	- 下载：# wget http://nginx.org/download/nginx-1.8.1.tar.gz
+	- 解压：# tar -zxvf nginx-1.8.1.tar.gz
+	- 进入目录：# cd nginx-1.8.1
+
+- 配置nginx：# ./configure --prefix=/usr/src/nginx --with-http_stub_status_module --with-http_ssl_module
+
+- 编译安装：# make && make install
+- 查看nginx版本：
+	- 进入安装目录：# cd /usr/src/nginx/sbin
+	- 查看版本：# ./nginx -v
+
+- 设置开机启动
+	- 编辑/etc/rc.local：# vim /etc/rc.local
+	- 添加一行：/usr/src/nginx/sbin/nginx，之后，开机会自动启动nginx
+
+- nginx 命令
+	- 进入nginx目录：# cd /usr/src/nginx/sbin
+	- 启动服务：# ./nginx
+	- 停止服务：# ./nginx -s stop
+	- 重启服务：# ./nginx -s reopen
+	- 重新载入配置文件：# ./nginx -s reload
+
+
+**Node** <br />
+- 准备 Node
+	- 下载：# wget https://nodejs.org/dist/v10.15.0/node-v10.15.0-linux-x64.tar.xz
+	- 解压：# tar -xvf node-v10.15.0-linux-x64.tar.xz
+	- 移动到/usr/local/：# mv node-v10.15.0-linux-x64 /usr/local/node-v10.15.0
+
+- 创建软链接：
+```
+ln -s /usr/local/node-v10.15.0/bin/node /usr/local/bin/node
+
+ln -s /usr/local/node-v10.15.0/bin/npm /usr/local/bin/npm
+
+ln -s /usr/local/node-v10.15.0/bin/npx /usr/local/bin/npx
+
+
+验证：
+	node -v
+	npm -v
+	npx -v
+```
+**Docker** <br />
+- 卸载旧版本：# yum remove docker docker-common docker-selinux
+- 安装需要的依赖包：# yum install -y yum-utils device-mapper-persistent-data
+- 配置稳定仓库：# yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+- 安装：# yum install docker-ce
+- 启动docker：# systemctl start docker
+- 加入开机启动：# systemctl enable docker
+- 验证安装是否成功：# docker -v
+
+**Docker-Compose** <br />
+- 安装epel-release依赖：# yum -y install epel-release
+- 安装python-pip：# yum -y install python-pip
+- 升级pip组件：# pip install --upgrade pip
+- 检查pip环境：# pip -V
+- 安装docker-compose：# pip install docker-compose
+- 检查安装是否成功：# docker-compose -version
+
+
+**Git** <br />
+- 准备Git
+	- 下载：wget https://www.kernel.org/pub/software/scm/git/git-2.9.4.tar.gz
+	- 解压：tar -zxvf git-2.9.4.tar.gz
+
+- 安装编译Git时需要的包
+```
+yum install curl-devel expat-devel gettext-devel openssl-devel zlib-devel
+yum install gcc perl-ExtUtils-MakeMaker
+```
+- 创建软链：# ln -s /usr/local/git/bin/* /usr/local/bin/
+- 删除已有的git：# yum remove git
+- 生成 ssh-key：# ssh-keygen -t rsa -C "xxx@hand-china.com"
+- 拷贝 id_rsa.pub 的SSH-Key 到 git
+
+
+**Maven** <br />
+- 准备maven
+	- 下载：# wget http://mirror.bit.edu.cn/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz
+	- 解压：# tar -zxvf apache-maven-3.3.9-bin.tar.gz
+	- 移动到/usr/local：# mv apache-maven-3.3.9 /usr/local/maven3
+
+- 添加环境变量：# vim /etc/profile，在最后添加如下两行
+```
+export MAVEN_HOME=/usr/local/maven3
+export PATH=$MAVEN_HOME/bin:$PATH
+```
+- 保存退出后输入命令使配置生效：# source /etc/profile
+- 检验是否安装成功：# mvn -v
+
+
+##### 数据服务安装
+**安装清单** <br />
+```
+组件	描述	版本
+Redis	缓存数据库	4.0.2
+Mysql	数据库	5.7.17
+Minio	对象存储服务	RELEASE.2018-05-25T19-49-13Z
+```
+
+**Redis** <br />
+- 拉取镜像：# docker pull redis
+
+- 启动容器：# docker run -d -p 6379:6379 --name redis -v /hzero/data-server/redis/data:/data redis
+
+**MySql** <br />
+- 拉取镜像：# docker pull registry.cn-hangzhou.aliyuncs.com/choerodon-tools/mysql:5.7.17
+
+数据库配置
+设置数据库表名不区分大小写，在 `/hzero/data-server/mysql/mysql_db.cnf` 下新建 `my.cnf` 文件，增加 `lower_case_table_names=1` ，其它配置可自行根据需求添加。
+
+**域名映射** <br />
+程序中基于域名映射各个服务器IP地址，因此需要在服务器和本地开发环境 hosts 文件中配置域名映射
+```
+192.168.xx.xxx db.hzero.org
+192.168.xx.xxx redis.hzero.org
+192.168.xx.xxx dev.hzero.org
+```
+
+##### 表及数据初始化
+```
+CREATE DATABASE hzero_platform DEFAULT CHARACTER SET utf8mb4;
+GRANT ALL PRIVILEGES ON hzero_platform.* TO hzero@'%';
+FLUSH PRIVILEGES;
+```
+[hzero-resource](https://code.choerodon.com.cn/hzero-hzero/hzero-resource/tree/1.0.0.RELEASE)
+
+表结构及初始化数据在 [hzero-resource](https://code.choerodon.com.cn/hzero-hzero/hzero-resource/tree/1.0.0.RELEASE)
+ 项目下。
+
+groovy：表结构 groovy 脚本
+init-data：初始化数据
+tool-jar：执行初始化的工具
+database-init.sh：执行初始化的脚本
+
+
+`database-init.sh`
+```
+#!/usr/bin/env bash
+mkdir -p tool-jar
+if [ ! -f tool-jar/hzero-tool-liquibase.jar ]
+then
+    curl http://nexus.saas.hand-china.com/content/repositories/Hzero-Release/org/hzero/tool/liquibase-tool/1.0.0.RELEASE/liquibase-tool-1.0.0.RELEASE.jar -o ./tool-jar/hzero-tool-liquibase.jar
+fi
+
+# 指定更新的服务，用下划线分隔
+service=hzero_platform
+# 更新的 schema
+schema=$service
+# 更新的目录，Groovy 脚本在 groovy 目录下，Excel 期初数据在 init-data 目录下
+dir=init-data/$service/
+
+java -Dspring.datasource.url="jdbc:mysql://db.hzero.org:3306/$schema?useUnicode=true&characterEncoding=utf-8&useSSL=false" \
+     -Dspring.datasource.username=hzero \
+     -Dspring.datasource.password=hzero \
+     -Ddata.drop=false \
+	 -Ddata.init=true \
+     -Ddata.dir=$dir \
+	 -Ddata.update.exclusion=iam_role \
+	 -Dlogging.level.root=info \
+     -jar tool-jar/hzero-tool-liquibase.jar
+```
+
+- 需要替换以下配置
+	- spring.datasource.url：数据库连接URL
+	- spring.datasource.username：数据库名称
+	- spring.datasource.password：数据库密码
+	- data.update.exclusion:排除数据更新的表或列
+	- service：要初始化或升级的服务，不同的服务需更改此处执行
+	- dir：要初始化或升级的脚本路径，不同的数据库需更改此处执行
+
+>注意：表结构和初始化数据是分开执行的，便于服务升级。如果更新表结构，设置 `dir=groovy/$service 即可`；如果更新数据，设置 `dir=init-data/$service` 即可。特别需要注意的是，hzero-iam 服务下的数据分 SaaS 版本和 OP 版本，请选择对应版本的数据初始化。
+
+
+**默认登录用户** <br />
+hzero-iam 的数据初始化好之后，默认的用户名密码为 [admin/Admin@123]，可使用此用户密码登陆系统。
+
+**数据处理** <br />
+在`部署后端服务` 完成后，需调用IAM服务的初始化接口进行一些初始化操作。
+
+调用 `data-init-controller [GET /v1/init/super-role-permission-sets]` 将权限集分别分配到平台超级管理员和租户超级管理员上。
+
+>服务初始化前，请先确定项目或产品是使用SaaS版还是OP版，SaaS 版本支持多租户，OP版本没有租户概念。
+
+- 正常情况下依赖于 hzero 的服务进行开发，hzero 服务发新版之后可自行决定是否升级服务。注：所有HZERO服务及组件在发布时都会统一升级一个版本，升级服务时可定一个稳定版本即可。
+
+- 以 hzero-gateway 服务为例，首先创建一个空的工程，一般以产品或编码为前缀命名，如 demo-gateway。
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016182602537-586530847.jpg)
+
+- 修改 pom.xml，可以 hzero-parent 为父 pom，也可自行建一个所属产品或项目的顶级 parent 项目进行统一版本管理，接着引入依赖的服务。
+
+>引用服务坐标时，可在服务清单下找到服务的坐标，SaaS 版本的 artifactId 是以 -saas 结尾的，请注意区分。
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016182735687-589701760.jpg)
+
+```
+<parent>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-parent</artifactId>
+    <version>1.0.0.RELEASE</version>
+</parent>
+
+<dependencies>
+    <!-- hzero-gateway -->
+    <dependency>
+        <groupId>org.hzero</groupId>
+        <artifactId>hzero-gateway</artifactId>
+    </dependency>
+
+    <!-- eureka-client -->
+    <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+    </dependency>
+    <!-- config-client -->
+    <dependency>
+        <groupId>io.choerodon</groupId>
+        <artifactId>choerodon-starter-config-client</artifactId>
+    </dependency>
+    <!-- mysql -->
+    <dependency>
+        <artifactId>mysql-connector-java</artifactId>
+        <groupId>mysql</groupId>
+    </dependency>
+
+</dependencies>
+```
+
+- 第一次使用需在 pom 中加入HZERO的Maven仓库地址：
+```
+<repositories>
+    <repository>
+        <id>HandPublic</id>
+        <name>Hand-Public Repository</name>
+        <url>http://nexus.saas.hand-china.com/content/repositories/public/</url>
+        <releases>
+            <enabled>true</enabled>
+        </releases>
+    </repository>
+    <repository>
+        <id>HzeroRelease</id>
+        <name>Hzero-Release Repository</name>
+        <url>http://nexus.saas.hand-china.com/content/repositories/Hzero-Release/</url>
+        <snapshots>
+            <enabled>false</enabled>
+        </snapshots>
+    </repository>
+    <repository>
+        <id>HzeroSnapshot</id>
+        <name>Hzero-Snapshot Repository</name>
+        <url>http://nexus.saas.hand-china.com/content/repositories/Hzero-Snapshot/</url>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+    </repository>
+</repositories>
+```
+
+- 从依赖包中复制出配置文件到 resources/ 目录下，主要修改 application.yml 中的一些配置即可。
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016182942703-525550501.jpg)
+
+- 修改启动类，加入对应的 @EnableHZeroXxx 注解，会自动扫描依赖服务的包。
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016183019943-1914648284.jpg)
+
+- 添加客户端依赖
+需自行根据使用的注册中心、配置中心、数据库驱动不同，加入相应的依赖，具体的依赖或配置请参考 [客户端依赖](http://hzerodoc.saas.hand-china.com/zh/docs/installation-configuration/service-config/dependency/)
+
+- 之后就可以运行服务测试了。
+
+##### 部署后端服务
+`后端服务`主要包括`基础服务`和`平台通用服务`，因为服务间有依赖，服务需`按一定顺序安装`，可根据下面的列表按装HZero平台必备服务。每个服务可按 `服务初始化` 中的流程创建自己产品或项目的服务。
+```
+服务	简码	默认端口	描述
+hzero-register	HREG	8000	注册中心
+hzero-config	HCFG	8010	配置服务
+hzero-gateway	HGWY	8080	网关服务
+hzero-oauth	HOTH	8020	认证服务
+hzero-iam	HIAM	8030	IAM服务
+hzero-swagger	HSWG	8050	Swagger测试服务（开发环境可装）
+hzero-platform	HPFM	8100	平台服务
+```
+
+- 服务都部署成功后，可以查看注册中心上的服务是否都注册成功
+
+注册中心地址：http://dev.hzero.org:8000
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016183359310-1605791201.jpg)
+
+- 访问 swagger 页面，测试API是否可用
+
+Swagger地址：http://dev.hzero.org:8080/swagger/swagger-ui.html
+
+`查看服务列表：`
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016183459824-599000987.jpg)
+
+>例如：找平台服务的API进行测试，首先需要授权，默认会跳转到 oauth 登录页面进行登录授权。之后便可访问API测试。 
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016183558643-1201386175.jpg)
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016183601592-784484266.jpg)
+
+
+##### 部署前端
+- 请确保如下环境变量已配置完成
+- 内存:
+	- 开发者模式运行内存: >4GB
+	- 生产环境编译运行内存: >4GB
+
+- yarn: 推荐使用yarn管理本项目
+```
+npm install --global yarn 
+
+npm install --global lerna
+
+请注意安装完lerna,在linux服务器可能需要执行如下命令,才能使lerna生效
+ln -s /usr/local/node-v10.15.0/bin/yarn /usr/local/bin/yarn ln -s /usr/local/node-v10.15.0/bin/lerna /usr/local/bin/lerna 
+```
+
+- 下载源码后，将前端构建脚本 [run.sh](http://hzerodoc.saas.hand-china.com/files/docs/installation-configuration/install/front-run.sh) 放到 hzero-front/ 根目录下。
+该脚本会构建项目，然后替换环境变量，其中：
+	- BUILD_API_HOST：网关地址
+	- BUILD_BPM_HOST：工作流地址
+	- BUILD_CLIENT_ID：客户端参数
+	- BUILD_WEBSOCKET_HOST：websocket 地址
+	- BUILD_PLATFORM_VERSION: OP/SAAS
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016183905821-1209402204.jpg)
+
+- 之后配置客户端的重定向地址，修改 hzero_platform.oauth_client 表，hzero_front_dev ，修改重定向地址为 
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016183949153-2144024422.jpg)
+
+- 修改nginx配置
+```
+cd /usr/src/nginx/conf
+vim nginx.conf
+```
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016184043661-1876348936.jpg)
+
+- 启动 nginx：
+```
+cd /usr/src/nginx/sbin
+
+./nginx
+```
+
+- 之后即可访问前端服务，访问前端地址，默认会跳转到登录页面进行登录
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191016184218770-1172336370.jpg)
+
+##### 其他
+- 服务的一些通用配置和重要项配置可参考：[服务配置](http://hzerodoc.saas.hand-china.com/zh/docs/installation-configuration/service-config/config/)
+
+- 基础服务的调用链路可参考：[基础服务调用链](http://hzerodoc.saas.hand-china.com/zh/docs/installation-configuration/service-config/service-chain/)
+
+- 前端工程构建脚本的命令说明如下:
+由于本项目使用lerna管理项目packages,所以初始化项目请务必执行如下初始化命令,确保主体项目和packages子项目依赖安装正确
+
+执行如下命令,安装本项目packages依赖(即初始化workspace)
+```
+lerna bootstrap --registry http://nexus.saas.hand-china.com/content/groups/  hzero-npm-group/
+```
+
+执行如下命令,安装本项目依赖
+```
+yarn --registry http://nexus.saas.hand-china.com/content/groups/hzero-npm-group/
+```
+
+>在开发模式下,可以执行如下命令可以跳过puppeteer安装过程中下载Chromium
+export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 #macos/linux
+
+>`build dll`: 本项目开启`webpack dll`插件,所以在执行`启动/build`操作之前,`请务必执行如下命令`$ yarn build:dll
+
+hzero-front主体工程依赖于packages下的各模块,所以需要编译packages下的各模块,执行如下命令
+```
+	 yarn transpile:prod
+or 
+	lerna run transpile
+```
+最后执行如下命令即可构建用于生产环境的静态资源文件dist
+```
+ yarn build:production
+```
+
+### 服务配置
+### 升级指南
 
 ## 用户手册
 
