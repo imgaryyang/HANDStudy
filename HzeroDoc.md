@@ -4832,9 +4832,685 @@ or
 ```
 
 ### 服务配置
+#### 服务通用配置
+几乎每个服务都会有的配置，如端口、服务名、连接信息等配置。
+
+##### 服务端口等配置
+```
+server:
+  # 服务端口
+  port: 8030
+management:
+  server:
+    port: 8031
+  endpoints:
+    web:
+      exposure:
+        # 需要开放的 Actuator 监控端点，默认开放所有
+        include: '*' 
+
+spring:
+  application:
+    # 服务名
+    name: hzero-platform 
+  profiles:
+     # 激活环境，开发环境设置为 dev 时，支持在返回信息中返回异常栈信息
+    active: default
+```
+
+##### 数据库连接信息
+```
+spring:
+  ## 数据库连接信息
+  datasource: 
+    # MySql：jdbc:mysql://db.hzero.org:3306/hzero_platform?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    # Oracle：jdbc:oracle:thin:@db.hzero.org:1521:XE
+    # SqlServer：jdbc:sqlserver://db.hzero.org:1433;DatabaseName=hzero_platform
+    url: jdbc:mysql://db.hzero.org:3306/hzero_platform?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: xxxxx
+    password: xxxxx
+    hikari:
+      # 连接池最小空闲连接数
+      minimum-idle: 20
+      # 连接池允许的最大连接数
+      maximum-pool-size: 200
+      # 等待连接池分配连接的最大时长（毫秒）
+      connection-timeout: 30000
+
+  # redis 配置  
+  redis:
+    host: redis.hzero.org
+    port: 6379
+    database: 1
+    jedis:
+      pool:
+        # 资源池中最大连接数
+        # 默认8，-1表示无限制；可根据服务并发redis情况及服务端的支持上限调整
+        max-active: 50
+        # 资源池运行最大空闲的连接数
+        # 默认8，-1表示无限制；可根据服务并发redis情况及服务端的支持上限调整
+        # 一般建议和max-active保持一致，避免资源伸缩带来的开销
+        max-idle: 50
+        # 当资源池连接用尽后，调用者的最大等待时间(单位为毫秒)
+        # 默认 -1 表示永不超时，设置5秒
+        max-wait: 5000
+```
+
+
+##### 配置中心客户端
+```
+spring:
+  # 配置中心
+  cloud:
+    config:
+      # 是否启用配置中心
+      # 若启用，服务启动时会自动向 hzero-config 拉去服务配置信息
+      enabled: true
+       # 快速失败，为 true 时，如果从配置中心获取配置失败，则无法启动服务
+      fail-fast: false
+      # 配置中心地址
+      uri: http://dev.hzero.org:8010
+      # 重试配置
+      retry: 
+        maxAttempts: 6
+        multiplier: 1.1
+        maxInterval: 2000
+      label: 
+```
+
+##### 本地多网卡配置
+```
+spring:
+  cloud:
+    inetutils:
+      # 设置首选网卡，对于本机有多块网卡的情况，可以设置首选网卡来注册
+      # 忽略回环网卡
+      ignored-interfaces[0]: lo
+      # 选择网段
+      preferred-networks[0]: 192.168
+```
+
+##### 容器undertow
+```
+# 服务器配置，使用 undertow 
+server:
+  undertow:
+    # 设置IO线程数, 它主要执行非阻塞的任务,它们会负责多个连接
+    # 默认值为8，建议设置每个CPU核心一个线程
+    io-threads: 4
+    # 阻塞任务线程池, 当执行类似servlet请求阻塞操作, undertow会从这个线程池中取得线程
+    # 默认等于 io-threads*8，它的值设置取决于系统的负载，可适当调大该值
+    worker-threads: 128
+    # 每块buffer的空间大小，越小空间被利用越充分
+    # 不要设置太大，以免影响其他应用，合适即可
+    buffer-size: 1024
+    # 是否分配的直接内存(NIO直接分配的堆外内存)
+    # 默认false
+    direct-buffers: true
+    # HTTP POST请求最大的大小
+    # 默认0，无限制，可设置10M
+    max-http-post-size: 10485760
+```
+
+##### Eureka客户端
+```
+eureka:
+  instance:
+    # 以IP形式注册到注册中心，如果为false，将以主机名称注册
+    preferIpAddress: true
+    # Eureka 客户端向服务端发送心跳的间隔时间
+    leaseRenewalIntervalInSeconds: 10 
+    # Eureka 服务端在收到最后一次心跳后等待的时间上限
+    leaseExpirationDurationInSeconds: 30 
+    metadata-map: 
+      # 服务版本，在 swagger 中看到的版本号就是此处的版本号
+      VERSION: 0.11.0 
+  client:
+    serviceUrl:
+      # 注册中心地址，多个注册中心用逗号隔开
+      defaultZone: http://dev.hzero.org:8000/eureka
+    # 从 eureka 服务端获取注册信息的间隔时间，单位为秒  
+    registryFetchIntervalSeconds: 10 
+```
+
+##### 数据库模式
+数据库所有者模式，例如 SqlServer 下的 dbo/guest，配置后，自动加上所有者，如：hzero-platform.dbo.fd_icon
+```
+hzero:
+  data:
+    permission:
+      db-owner: 
+```
+
+##### 熔断 & 超时时间设置
+```
+# zuul 超时时间，仅在网关层设置，可设置大一点
+zuul:
+  host:
+    connect-timeout-millis: 120000
+    socket-timeout-millis: 120000
+
+# 是否启用 feign
+feign:
+  hystrix:
+    enabled: true
+
+hystrix:
+  threadpool:
+    default:
+      # 执行命令线程池的核心线程数，也是命令执行的最大并发量；默认10
+      coreSize: 1000
+      # 最大执行线程数
+      maximumSize: 1000
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            # HystrixCommand 执行的超时时间，超时后进入降级处理逻辑。 默认 1000 毫秒，最高设置 2000足矣。
+            # 如果超时，首先看能不能优化接口相关业务、SQL查询等
+            # 不要盲目加大超时时间，否则会导致线程堆积过多，hystrix 线程池卡死，最终服务不可用。
+            timeoutInMilliseconds: 40000
+
+ribbon:
+  # 客户端读取超时时间，超时时间要小于Hystrix的超时时间，否则重试机制就无意义了
+  ReadTimeout: 30000
+  # 客户端连接超时时间
+  ConnectTimeout: 3000
+  # 访问实例失败(超时)，允许自动重试，设置重试次数
+  # 失败后会更换实例访问，请一定确保接口的幂等性，否则重试可能导致数据异常。
+  OkToRetryOnAllOperations: true
+  MaxAutoRetries: 1
+  MaxAutoRetriesNextServer: 1
+```
+
+##### 服务路由配置
+在 config/ 包下建一个 ExtraDataManager 的子类来描述该服务的路由信息。服务注册成功后，hzero-config 会自动刷新路由到数据库，并通知 gateway 服务拉取最新的路由。
+
+- 建议项目上，每个服务自定义一个 ExtraDataManager 的实现类，使用配置的形式注入服务配置，便于开发人员本地开发。
+```
+@ChoerodonExtraData
+public class HiamExtraDataManager implements ExtraDataManager {
+    @Autowired
+    private org.springframework.core.env.Environment environment;
+
+    @Override
+    public ExtraData getData() {
+        ChoerodonRouteData choerodonRouteData = new ChoerodonRouteData();
+        choerodonRouteData.setName(environment.getProperty("hzero.service.current.name", "hiam"));
+        choerodonRouteData.setPath(environment.getProperty("hzero.service.current.path", "/iam/**"));
+        choerodonRouteData.setServiceId(environment.getProperty("hzero.service.current.service-name", "hzero-iam"));
+        choerodonRouteData.setPackages("org.hzero.iam");
+        extraData.put(ExtraData.ZUUL_ROUTE_DATA, choerodonRouteData);
+        return extraData;
+    }
+}
+
+# name：表示路由唯一ID，一般用服务简码表示  
+# path：表示路由前缀，也可用服务简码表示，前端调用服务API时需加上路由前缀  
+# serviceId：服务名称，网关通过路由前缀匹配到服务后，将基于Ribbon请求该服务
+# packages: 指定扫描API的包，多个可用逗号分隔，可为空
+```
+
+- 本地开发时，则可以在环境变量或本地配置文件中配置带后缀的服务名
+```
+hzero:
+  service:
+    current:
+      name: hiam-16007
+      path: /iam-16007/**
+      service-name: hzero-iam-16007
+```
+
+>个人本地开发建议服务名加上后缀做区分，如 hzero-platform-16007，同时需要修改 ExtraDataManager 中的路由配置，分别加上后缀，保持配置文件中的服务名和 ExtraDataManager 中配置的服务名一致。
+
+##### 用户访问配置
+在服务启动类上，一般都会加上 @EnableChoerodonResourceServer 注解，该注解的主要功能是开启一个过滤器JwtTokenFilter，解析 Jwt_Token，得到用户信息，因此可以在程序中通过 DetailsHelper.getUserDetails() 得到当前访问的用户信息。同时，该过滤器默认对/v1/*接口生效，如果其它前缀的路由也需要用户信息，需手动配置。
+
+```
+hzero:
+  resource:
+    pattern: /v1/*,/v2/*
+```
+
+##### 服务名设置
+对于继承HZERO开发的服务，如果要修改hzero服务名，需要在所有服务中配置新的服务名称。
+HZeroService 里维护了所有HZERO服务的服务简码及名称等信息，服务名称以变量形式表示，对于服务中的Feign调用一般都使用HZeroService里的服务常量表示，因此如果改动了服务名称，需要在配置文件里加上响应的配置。
+
+服务中需要用到服务简码、服务名称、服务RedisDB的情况下，可以使用HZeroService中配置的常量。
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191017092049637-1567195563.jpg)
+
+```
+hzero:
+  service:
+    # 注册中心
+    register:
+      name: hzero-register
+      redis-db: 1
+      port: 8000
+    # 网关服务  
+    gateway:
+      name: hzero-gateway
+      redis-db: 4
+      port: 8080
+    # 配置中心  
+    config:
+      name: hzero-config
+      redis-db: 1
+      port: 8010
+    # 认证服务  
+    oauth:
+      name: hzero-oauth
+      redis-db: 3
+      port: 8020
+    # IAM 身份服务  
+    iam:
+      name: hzero-iam
+      redis-db: 1
+      port: 8030
+    # 事务服务  
+    asgard:
+      name: hzero-asgard
+      port: 8040
+      redis-db: 4
+    # 文档测试服务  
+    swagger:
+      name: hzero-swagger
+      port: 8050
+      redis-db: 4
+    # 平台服务  
+    platform:
+      name: hzero-platfor
+      port: 8100
+      redis-db: 1
+    # 文件服务  
+    file:
+      name: hzero-file
+      port: 8110
+      redis-db: 1
+    # 消息服务  
+    message:
+      name: hzero-message
+      port: 8120
+      redis-db: 1
+    # 调度服务  
+    scheduler:
+      name: hzero-scheduler
+      port: 8130
+      redis-db: 1
+    # 导入服务  
+    import:
+      name: hzero-import
+      port: 8140
+      redis-db: 1
+    # 接口服务  
+    interface:
+      name: hzero-interface
+      port: 8150
+      redis-db: 1
+    # 数据传输服务  
+    transfer:
+      name: hzero-transfer
+      port: 8180
+      redis-db: 1
+    # 报表服务  
+    report:
+      name: hzero-report
+      port: 8210
+      redis-db: 1
+    # 工作流（Plus）  
+    workflow-plus:
+      name: hzero-workflow-plus
+      port: 8220
+      redis-db: 1
+    # 自然语言处理  
+    nlp:
+      name: hzero-nlp
+      port: 8230
+      redis-db: 1
+    # 监控服务  
+    monitor:
+      name: hzero-monitor
+      port: 8260
+      redis-db: 1
+    # 支付服务  
+    pay:
+      name: hzero-pay
+      port: 8250
+      redis-db: 1
+```
+
+
+#### 客户端依赖
+##### 注册中心
+HZERO 注册中心提供多个版本的支持，根据实际使用的注册中心引入相应的依赖和修改对应的配置即可。
+
+###### Eureka版本
+`依赖`
+```
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+</dependency>
+```
+
+`配置`
+```
+eureka:
+  instance:
+    # 以IP注册到注册中心
+    preferIpAddress: ${EUREKA_INSTANCE_PREFER_IP_ADDRESS:true}
+    leaseRenewalIntervalInSeconds: 10
+    leaseExpirationDurationInSeconds: 30
+    # 服务的一些元数据信息
+    metadata-map:
+      VERSION: 0.10.0
+      NODE_GROUP_ID: ${HZERO_NODE_GROUP_ID:0}
+      PRODUCT_CODE: ${HZERO_PRODUCT_CODE:DEFAULT}
+      PRODUCT_VERSION_CODE: ${HZERO_PRODUCT_VERSION_CODE:DEFAULT}
+      PRODUCT_ENV_CODE: ${HZERO_PRODUCT_ENV_CODE:DEFAULT}
+      SERVICE_VERSION_CODE: ${HZERO_SERVICE_VERSION_CODE:DEFAULT}
+  client:
+    serviceUrl:
+      # 注册中心地址
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://dev.hzero.org:8000/eureka}
+    registryFetchIntervalSeconds: 10
+    disable-delta: true
+```
+
+###### Zookeeper版本
+`依赖`
+```
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
+</dependency>
+```
+`配置`
+```
+spring:
+  cloud:
+    zookeeper:
+      connect-string: localhost:2181
+      discovery:
+        enabled: true
+        metadata:
+          VERSION: 0.10.0
+```
+>注意：使用过程中需要注意zookeeper的版本对应关系，使用3.4.x版本zookeeper server时，需要先移除3.5.x.beta的zookeeper再引入3.4.x版本的zookeeper。
+
+```
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
+    <exclusions>
+        <exclusion>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+<dependency>
+    <groupId>org.apache.zookeeper</groupId>
+    <artifactId>zookeeper</artifactId>
+    <version>3.4.12</version>
+    <exclusions>
+        <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
+
+###### Nacos(edas) 版本
+`依赖`
+```
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+</dependency>
+```
+
+
+`配置`
+```
+spring:
+  cloud:
+	nacos:
+  	  discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: 3767dfeb-ec5f-4611-97bb-ee530d19ef89
+        metadata:
+          VERSION: 0.10.0
+```
+
+###### Formula(cnap) 版本
+`依赖`
+```
+<dependency>
+    <groupId>com.baidu.formula</groupId>
+    <artifactId>discovery-spring-boot-starter</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.baidu.formula</groupId>
+    <artifactId>env-core-spring-boot-starter</artifactId>
+</dependency>
+```
+
+`配置`
+```
+formula:
+  discovery:
+    service-url: http://cnapregistry.bj.baidubce.com:443/api/service-center
+    customs: 
+      VERSION: 0.10.0
+```
+>注意：在对接cnap的过程中需要注意，目前formula并没有提供ribbon的实现，如果服务中有使用到ribbon相关的功能（如@LoadBalance restTemplate或feign+ribbon），那么需要确保服务引入了spring-cloud-starter-netflix-ribbon。
+
+```
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
+</dependency>
+```
+
+#### 配置中心
+HZERO 配置中心提供多版本的支持，根据实际使用的配置中心引入相应的依赖和修改对应的配置即可。
+
+##### SpringCloud 版本
+`依赖`
+```
+<dependency>
+    <groupId>io.choerodon</groupId>
+    <artifactId>choerodon-starter-config-client</artifactId>
+</dependency>
+```
+
+`配置`
+hzero-config 基于 Spring Cloud Config 实现，配置方式是继承Spring Cloud Config的配置方式。
+
+```
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:default}
+  cloud:
+    config:
+      fail-fast: false
+      # 是否启用配置中心
+      enabled: ${SPRING_CLOUD_CONFIG_ENABLED:false}
+      # 配置中心地址
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://dev.hzero.org:8010}
+      retry:
+        # 最大重试次数
+        maxAttempts: 6
+        multiplier: 1.1
+        # 重试间隔时间
+        maxInterval: 2000
+      # 标签
+      label: ${SPRING_CLOUD_CONFIG_LABEL:}
+```
+
+##### Nacos(edas) 版本
+`依赖`
+```
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+</dependency>
+``` 
+
+`配置`
+```
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:default}
+  cloud:
+    nacos:
+      config:
+        server-addr: 127.0.0.1:8848
+        namespace: 3767dfeb-ec5f-4611-97bb-ee530d19ef89
+```
+
+##### Formula(cnap) 版本
+`依赖`
+```
+<dependency>
+    <groupId>com.baidu.formula</groupId>
+    <artifactId>config-client-spring-boot-starter</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.baidu.formula</groupId>
+    <artifactId>env-core-spring-boot-starter</artifactId>
+</dependency> 
+```
+`配置`
+
+formula-config基于Spring Cloud Config实现，所以配置方式与 Spring Cloud Config的配置方式相似。
+
+```
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:default}
+  cloud:
+    config:
+      fail-fast: false
+      # 是否启用配置中心
+      enabled: ${SPRING_CLOUD_CONFIG_ENABLED:true}
+      # 配置中心地址
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://cnapregistry.bj.baidubce.com:443/api/config}
+      retry:
+        # 最大重试次数
+        maxAttempts: 6
+        multiplier: 1.1
+        # 重试间隔时间
+        maxInterval: 2000
+      # 标签
+      label: ${SPRING_CLOUD_CONFIG_LABEL:}
+```
+>注意：必须确保引入了spring-cloud-starter-config-client且开启配置中心，否则会启动失败。 原因：formula目前打包的all依赖formula-cnap依赖了formula-parent，但formula-parent暂未发布，所以无法为我们自动引入spring-cloud-starter-config-client等依赖。
+
+```
+spring.cloud.config.enabled: true
+```
+
+##### Apollo
+
+简介 apollo本身提供了apollo-client的sdk，但apollo配置中心定位是在Spring、Spring Boot及更轻量的微服务架构中，如果需要整合到Spring Cloud体系中（如网关），则需要用户增强实现一些功能，所以Hzero提供了hzero-starter-apollo-client包来帮助用户将apollo轻松整合到Spring Cloud应用中。
+
+`依赖`
+```
+<dependency>
+    <groupId>org.hzero.starter</groupId>
+    <artifactId>hzero-starter-apollo-config</artifactId>
+</dependency>
+```
+
+`配置`
+```
+spring:
+  cloud:
+    apollo:
+      config:
+        enable: true
+        listener:
+          interestedKeyPrefixes: zuul.
+          interestedKeys: zuul.test.path, zuul.test.service-id
+```
+>Note: 使用细节可以参考hzero-starter-apollo-client
+
+#### 数据库
+>HZERO 至少支持 MySql、TiDB、Oracle、SqlServer 等数据库，根据使用的数据库类型引入不同的数据库驱动
+
+
+##### MySql、TiDB
+`依赖`
+```
+<dependency>
+    <artifactId>mysql-connector-java</artifactId>
+    <groupId>mysql</groupId>
+</dependency>
+```
+
+`数据源配置`
+```
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://db.hzero.org:3306/hzero_xxxx?useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: hzero
+    password: hzero
+```
+
+##### Oracle
+`依赖`
+```
+<dependency>
+    <groupId>com.oracle</groupId>
+    <artifactId>ojdbc7</artifactId>
+</dependency>
+```
+
+`数据源配置`
+```
+spring:
+  datasource:
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    url: jdbc:oracle:thin:@db.hzero.org:1521:XE
+    username: hzero
+    password: hzero
+```
+
+##### SqlServer
+`依赖`
+```
+<dependency>
+    <groupId>com.microsoft.sqlserver</groupId>
+    <artifactId>sqljdbc4</artifactId>
+</dependency>
+```
+
+`数据源配置`
+
+```
+spring:
+  datasource:
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://db.hzero.org:1433;DatabaseName=hzero_xxxx
+    username: SA
+    password: hzero
+```    
+
+
 ### 升级指南
+将 HAP3.X 版本升级至 HZERO，并注册为 HZERO 的微服务使用。本文档案例基于 HAP 3.5.6 进行，对应的 HZERO 平台需使用 1.1.0.RELEASE 版本及以上。
+
+后续调整代码会用到一些工具包及源码文件，已上传至汉得网盘，密码请向HZERO平台获取，请提前下载，：[HAP升HZERO相关文件](http://pan.hand-china.com/owncloud/index.php/s/LMc04esar7q6gxE)
 
 ## 用户手册
+[看官方文档](http://hzerodoc.saas.hand-china.com/zh/docs/user-guide/)
+
 
 ## 开发规范
 
