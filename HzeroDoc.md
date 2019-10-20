@@ -5513,10 +5513,246 @@ spring:
 
 
 ## 开发规范
+### 基础开发规范
+#### 分支管理
+目前比较流行的分支管理模型有三个，即`GitFlow`、`GitLabFlow`、`GitHubFlow`。下面将介绍这三种分支模型的原理，使用场景和优缺点等。
+
+##### GitFlow
+该模型中存在两种长期分支：master 和 develop。 master中存放对外发布的版本，只有稳定的发布版本才会合并到master中。 develop用于日常开发，存放最新的开发版本。
+
+也存在三种临时分支：`feature, hotfix, release`。
+
+- feature分支是为了开发某个特定功能，从develop分支中切出，开发完成后合并到develop分支中。
+
+- hotfix分支是修复发布后发现的Bug的分支，从master分支中切出，修补完成后再合并到master和develop分支。
+
+- release分支指发布稳定版本前使用的预发布分支，从develop分支中切出，预发布完成后，合并到develop和master分支中。
+
+**** <br />
+- feature 分支使开发代码隔离，可以独立的完成开发、构建、测试
+
+- feature 分支开发周期长于release时，可避免未完成的feature进入生产环境
+
+
+**缺点：**
+
+- 无法支持持续发布。
+- 过于复杂的分支管理，加重了开发者的负担，使开发者不能专注开发。
+
+
+##### GitHubFlow
 
 ## 开发指引
 
 ## 平台组件
+### 辅助开发包
+`组件编码 hzero-starter-core`
+
+#### 简介
+**概述** <br />
+定义了基础实现类，异常封装，常用工具等。
+
+**组件坐标** <br />
+```
+<dependency>
+     <groupId>org.hzero.starter</groupId>
+    <artifactId>hzero-starter-core</artifactId>
+    <version>${hzero.starter.version}</version>
+</dependency>
+
+```
+
+#### 组件功能
+**base** <br />
+base 包主要定义了一些基础常量、BaseController 等。
+- BaseController：
+	- 提供了校验单个对象和集合元素的方法 validObject、validList，只需在 Controller 接口方法里使用这些方法即可对 @NotBlank、@Size、@NotNull 等常用 hibernate-validator 包的校验注解进行校验。
+	- 提供了getMessage、getExceptionResponse、locale 等与返回消息相关的便捷方法使用。
+
+- BaseConstants
+	- 定义了常用的字段常量：
+```
+Long DEFAULT_TENANT_ID = 0L;
+String PAGE = "0";
+String SIZE = "10";
+String FIELD_BODY = "body";
+String FIELD_CONTENT = "content";
+String FIELD_MSG = "message";
+String FIELD_FAILED = "failed";
+```
+>在 Pattern 接口定义了各种格式的日期时间格式常量：interface Pattern {
+
+在 Symbol 接口定义了常用的特殊符号：
+```
+interface Symbol {
+    String SIGH = "!";
+    String AT = "@";
+    String WELL = "#";
+    String DOLLAR = "$";
+    String RMB = "￥";
+    String PERCENTAGE = "%";
+    String AND = "&";
+    String STAR = "*";
+    String MIDDLE_LINE = "-";
+    String LOWER_LINE = "_";
+    String EQUAL = "=";
+    String PLUS = "+";
+    String COLON = ":";
+    String SEMICOLON = ";";
+    String COMMA = ",";
+    String POINT = ".";
+    String SLASH = "/";
+    String DOUBLE_SLASH = "//";
+    String BACKSLASH = "\\";
+    String QUESTION = "?";
+}
+
+```
+
+- AopProxy
+提供self()方法便于获取自身接口代理对象，常用在一个事务方法里调用当前类的其它事务方法，如果不使用代理对象调用方法，本质使用的是原始对象，因而可能导致事务或AOP拦截不生效。 
+
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191020124100369-692963455.jpg)
+
+
+**config** <br />
+config 包提供了配置工具。
+
+- Configurer：
+```
+程序中自定义的 Properties 类，可实现该接口。在项目启动时，Configurer 配置器会获取 CustomProperties 子类中配置的属性并缓存起来，在程序运行期间，可通过 Configurer 提供的静态方法根据编码获取对应的配置值，比较方便。但注意Configurer是运行时获取配置属性，不支持编译时获取属性。
+```
+- Covered/Extended：
+```
+在依赖扩展开发中，我们一般需要自定义 Covered/Extended 接口，如果完全替换了某个类，需要标识该类为Covered，如果是基于某个类新增了某些功能，需要标识该类为Extended。主要目的在于方便我们知道扩展开发中哪些是继承的，哪些是覆盖的。 一般情况不会使用。
+```
+
+** exception** <br />
+exception 包提供了基础的异常类，以及全局异常处理器：
+- BaseExceptionHandler：异常处理器，拦截各类异常，获取多语言消息，返回 ResponseEntity。
+- CheckedException：受检异常类，继承自Exception，程序中需要抛出一定需要捕捉的异常时，可使用该异常类。
+- IllegalOperationException：非法操作异常，对于某些不能进入的方法、操作，可直接抛出该异常。
+- MessageException：在程序中，某些消息在抛出时已经处理过，不需要异常处理器再去获取多语言消息，可使用该异常，异常处理器会直接将消息返回。
+- NotLoginException：未登录异常。
+- OptimisticLockException：乐观锁检查异常。
+
+**util** <br />
+util 包提供了一些常用的扩展的工具类：
+- AssertUtils：Assert 扩展
+- CheckStrength：检测密码强度工具
+- FieldNameUtils： 驼峰-下划线互转
+- EncoderUtils： 对文件名称进行编码，处理一些特殊字符。
+- EncryptionUtils：加解密工具类，提供了 MD5、AES、RSA、RSA2 等加密方式
+- Reflections： 反射工具类
+- Regexs： 正则表达式工具类，提供了常用的正则表达式常量及校验方法
+- Results：返回 ResponseEntity 对象
+- UUIDUtils：生成UUID
+- ValidUtils： 数据校验工具
+- EncryptionUtils：加密解密工具类，如：MD5 非对称加密、AES 对称加密、RSA 对称加密、RSA2 对称加密
+- Sequence：分布式高效有序ID生产工具
+- StringPool：String 相关常量
+- SensitiveUtils：敏感信息工具类
+- ResponseUtils：响应处理工具类
+- PinyinUtils：拼音处理工具类
+
+**redis** <br />
+- redis 包提供封装好的 RedisHelper 工具类，可以方便地操作各类redis数据结构。
+
+- 同时，提供了线程安全的支持动态切换 redis database 的 DynamicRedisHelper，DynamicRedisHelper 继承自 RedisHelper，在代码中只需注入 RedisHelper 即可。
+
+- 动态切 redis database 的功能默认开启，可配置 hzero.redis.dynamic-database=false 关闭该功能。
+
+- 在需要切换 database 的地方，调用 redisHelper.setCurrentDatabase(int database) 即可，同时必须调用 redisHelper.clearCurrentDatabase() 清除当前操作 database，否则当前线程将一直使用这个 database ，对于同一个线程内多次 redis 操作可能会有影响。
+![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191020133151760-1007603689.jpg)
+
+
+**cache** <br />
+cache下主要提供了一个功能，使用注解根据配置从缓存中获取值。
+
+- 此功能默认不开启，可配置 hzero.cache-value.enable=true 来开启该功能。
+
+- 使用方式，比如，将用户ID和用户名缓存到redis中，大部分情况下我们只有用户ID，此时我们可以根据用户ID来获取用户名。主要使用到的注解有两个：@CacheValue 和 @ProcessCacheValue。对于某个DTO，有字段用到该功能时，需要实现 Cacheable 接口，标识为可从缓存中取值的对象，这样便于对头行结构中的字段进行处理。
+
+- 如下，DTO中有一个 createdBy 字段，我们需要根据该创建人ID获取到创建人姓名，通过 @CacheValue 来从redis中获取值: key 指定缓存的key，支持占位符的形式；primaryKey指定根据哪个字段匹配；searchKey指定从redis结构中要查找的字段；structure指定redis的数据结构。缓存的数据结构不同，CacheValue的配置也不同，具体可参考源码注释详解。
+
+```
+public class DemoDTO implements Cacheable {
+
+private Long createdBy; // 创建人ID
+
+@CacheValue(key = HZeroCacheKey.USER, primaryKey = "createdBy", searchKey = "realName",
+        structure = CacheValue.DataStructure.MAP_OBJECT)
+private String createdUserName; // 创建人姓名
+
+// getter/setter
+}
+```
+- 配置好后，还需在查询的 service 或 controller 的方法上加上 @ProcessCacheValue 注解，以此进行AOP拦截处理。
+
+**captcha** <br />
+captcha 下提供了基础的验证码功能封装。
+
+- 如果需要开启验证码功能，首先需要配置hzero.captcha.enable=true。
+
+- CaptchaProperties：提供了图片验证码和信息验证码的常用配置，如验证码的长宽，验证码来源、过期时间等。对于信息验证码，可配置发送验证码间隔时间(interval)、限制时间内发送次数上限(limitTime)、次数限制在多长时间内(limitInterval)等等。
+- CaptchaImageHelper：提供图片验证码功能，调用generateAndWriteCaptchaImage生成图片验证码，会将验证码缓存到redis中，并将 captchaKey 和 captcha 写到 cookie 中。调用checkCaptcha 方法检查验证码正确与否，调用 getCaptcha 方法从缓存中获取验证码。
+- CaptchaMessageHelper：用于短信验证码或者邮箱验证码，只用于生成、校验验证码，并不会直接发送验证码，发送验证码可使用hzero-boot-message客户端。该helper主要封装了生成验证码、校验验证码时的各种验证，并返回相应的多语言消息，验证码及各种key、消息都封装到CaptchaResult返回，需要自行处理结果。
+
+
+**message** <br />
+- HZeroCoreMessageSource：hzero-starter-core 默认的 MessageSource，由于在项目中，自动注入的 MessageSource 只能获取到当前 classpath 下的资源文件，无法获取到 jar 包内的资源文件，因此建议每个独立的 jar 包都开发一个独有的 MessageSource 来获取当前 jar 下的资源文件。
+
+- MessageAccessor：获取当前 classpath 下资源多语言的工具，封装 Spring 的 MessageSourceAccessor，提供多种便捷的方法。
+
+- algorithm
+常用算法工具
+tree(递归构建树)
+	- 功能说明：将具有层级结构的数据使用递归关联起来，父对象中会有一个children列表对象来存放子子对象。
+	- 使用方式
+		- Bean对象继承org.hzero.core.algorithm.tree.Child类，泛型为子对象的类型，也就是当前Bean的类
+		- 调用org.hzero.core.algorithm.tree.TreeBuilder.buildTree(...)静态方法构建树
+		- List<T> objList ： 该参数为原数据列表
+Node<P, T> nodeOperation : 该参数为接口，继承了Key和ParentKey接口，需要自行实现，包含两个方法，getKey()方法用户获取当前节点的Key，getParentKey()用于获取父节点的Key，当前节点的key等于子节点的parentKey()时建立关联关系
+		- P rootKey : 该参数为根节点的key，这个参数非必须，但请尽可能提供这个参数，如果不提供，会多遍历一次列表取构建根节点
+		- Key<P, T> key : 获取当前节点的key
+		- ParentKey<P, T> parentKey : 获取父节点的Key 
+
+
+- 使用实例
+```
+class Entity extentds org.hzero.core.algorithm.tree.Child<Entity> {
+    Integer id;
+    Integer parentId;
+    // other field ...
+    // getter and setter ...
+}
+
+// method
+List<Entity> objList = // from anywhere...
+List<Entity> result = org.hzero.core.algorithm.tree.TreeBuilder.buildTree(objList, null, Entity::getId, Entity::getParentId)
+```
+
+```
+[                                                   [
+    {                                                   {
+        "id":1,                                             "id":1,
+        "parentId":null,                                    "parentId":null,
+        ...                                                 "children":[{
+    },{                                                         "id":2,
+        "id":2,                                                 "parentId":1,
+        "parentId":1,               ->                          ...
+        ...                                                 },{
+    },{                                                         "id":3,
+        "id":3,                                                 "parentId":1,
+        "parentId":1,                                           ...
+        ...                                                 }]
+    }                                                       ...
+    ...                                                 }
+]                                                   ]
+```
+
+**** <br />
+**** <br />
 
 ## HZERUI
 
