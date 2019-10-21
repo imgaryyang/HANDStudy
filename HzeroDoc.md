@@ -5563,7 +5563,7 @@ spring:
 ```
 
 #### 组件功能
-**base** <br />
+##### base
 base 包主要定义了一些基础常量、BaseController 等。
 - BaseController：
 	- 提供了校验单个对象和集合元素的方法 validObject、validList，只需在 Controller 接口方法里使用这些方法即可对 @NotBlank、@Size、@NotNull 等常用 hibernate-validator 包的校验注解进行校验。
@@ -5615,7 +5615,7 @@ interface Symbol {
 ![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191020124100369-692963455.jpg)
 
 
-**config** <br />
+##### config
 config 包提供了配置工具。
 
 - Configurer：
@@ -5627,7 +5627,7 @@ config 包提供了配置工具。
 在依赖扩展开发中，我们一般需要自定义 Covered/Extended 接口，如果完全替换了某个类，需要标识该类为Covered，如果是基于某个类新增了某些功能，需要标识该类为Extended。主要目的在于方便我们知道扩展开发中哪些是继承的，哪些是覆盖的。 一般情况不会使用。
 ```
 
-** exception** <br />
+##### exception
 exception 包提供了基础的异常类，以及全局异常处理器：
 - BaseExceptionHandler：异常处理器，拦截各类异常，获取多语言消息，返回 ResponseEntity。
 - CheckedException：受检异常类，继承自Exception，程序中需要抛出一定需要捕捉的异常时，可使用该异常类。
@@ -5636,7 +5636,7 @@ exception 包提供了基础的异常类，以及全局异常处理器：
 - NotLoginException：未登录异常。
 - OptimisticLockException：乐观锁检查异常。
 
-**util** <br />
+##### util
 util 包提供了一些常用的扩展的工具类：
 - AssertUtils：Assert 扩展
 - CheckStrength：检测密码强度工具
@@ -5655,7 +5655,7 @@ util 包提供了一些常用的扩展的工具类：
 - ResponseUtils：响应处理工具类
 - PinyinUtils：拼音处理工具类
 
-**redis** <br />
+##### redis
 - redis 包提供封装好的 RedisHelper 工具类，可以方便地操作各类redis数据结构。
 
 - 同时，提供了线程安全的支持动态切换 redis database 的 DynamicRedisHelper，DynamicRedisHelper 继承自 RedisHelper，在代码中只需注入 RedisHelper 即可。
@@ -5666,7 +5666,7 @@ util 包提供了一些常用的扩展的工具类：
 ![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191020133151760-1007603689.jpg)
 
 
-**cache** <br />
+##### cache
 cache下主要提供了一个功能，使用注解根据配置从缓存中获取值。
 
 - 此功能默认不开启，可配置 hzero.cache-value.enable=true 来开启该功能。
@@ -5689,7 +5689,7 @@ private String createdUserName; // 创建人姓名
 ```
 - 配置好后，还需在查询的 service 或 controller 的方法上加上 @ProcessCacheValue 注解，以此进行AOP拦截处理。
 
-**captcha** <br />
+##### captcha
 captcha 下提供了基础的验证码功能封装。
 
 - 如果需要开启验证码功能，首先需要配置hzero.captcha.enable=true。
@@ -5699,7 +5699,7 @@ captcha 下提供了基础的验证码功能封装。
 - CaptchaMessageHelper：用于短信验证码或者邮箱验证码，只用于生成、校验验证码，并不会直接发送验证码，发送验证码可使用hzero-boot-message客户端。该helper主要封装了生成验证码、校验验证码时的各种验证，并返回相应的多语言消息，验证码及各种key、消息都封装到CaptchaResult返回，需要自行处理结果。
 
 
-**message** <br />
+##### message
 - HZeroCoreMessageSource：hzero-starter-core 默认的 MessageSource，由于在项目中，自动注入的 MessageSource 只能获取到当前 classpath 下的资源文件，无法获取到 jar 包内的资源文件，因此建议每个独立的 jar 包都开发一个独有的 MessageSource 来获取当前 jar 下的资源文件。
 
 - MessageAccessor：获取当前 classpath 下资源多语言的工具，封装 Spring 的 MessageSourceAccessor，提供多种便捷的方法。
@@ -5751,8 +5751,281 @@ List<Entity> result = org.hzero.core.algorithm.tree.TreeBuilder.buildTree(objLis
 ]                                                   ]
 ```
 
+
+##### structure（自定义数据结构）
+- 功能说明：提供一些自定义的数据结构
+- 使用说明
+	- org.hzero.core.algorithm.structure.LinkedQueue：有序队列，基于LinkedList实现，线程不安全，每次add/append元素之后的数据都是按照顺序排列的，每次插入时使用二分法查找插入的位置。
+
+
+##### jackson
+封装了一些jackson序列化和反序列化的操作，支持Java8时间格式的序列化，使用前需要在Spring Boot启动类上添加`org.hzero.core.jackson.annotation.EnableObjectMapper`注解。
+
+** 忽略时区转换 ** <br />
+- 功能说明：默认情况下，所有java.util.Date在序列化和反序列化时会按照当前用户设置的时区对时间进行转换(固定格式yyyy-MM-dd HH:mm:ss)，如果时间不需要做转换，可以使用该功能忽略时区转换。
+- 使用说明
+	- 序列化和反序列化时忽略时区转换：在字段上添加`@org.hzero.core.jackson.annotation.IgnoreTimeZone`注解
+	- 序列化时忽略时区转换：在字段上添加`@com.fasterxml.jackson.databind.annotation.JsonSerialize(using = org.hzero.core.jackson.serializer.IgnoreTimeZoneDateSerializer)`注解
+	- 反序列化时忽略时区转换：在字段上添加`@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = org.hzero.core.jackson.serializer.IgnoreTimeZoneDateDeserializer)`注解
+
+**字符串两端空格过滤 ** <br />
+- 功能说明：前端往后端传输数据时，有些字段需要过滤两端空格，例如编码等，添加注解可以在反序列化时过滤掉空格。
+- 使用说明：在字段上添加注解`@org.hzero.core.jackson.annotation.Trim`注解，可以指定不同的过滤策略，默认两端过滤，也可以设置左或者右一端。
+
+**敏感信息加密** <br />
+- 功能说明：后端往前端传输数据时，有些数据可能需要按照某种规则屏蔽掉敏感信息，例如电话号码中间四位显示“*”。
+- 使用说明
+	- 在数据返回前端之前，调用org.hzero.core.jackson.sensitive.SensitiveHelper.open()方法，开启敏感信息屏蔽，当前线程内有效，一次序列化之后自动关闭。
+	- 在返回Bean的字段上添加@org.hzero.core.jackson.annotation.Sensitive注解，注解中可以指定多种规则取屏蔽敏感信息。
+		- left : 从左边开始前 n 位替换
+		- right : 从右边开始后 n 位替换
+		- cipher : 复杂密文规则，下标从1开始，屏蔽某一位字符直接指定下标即可；屏蔽某一个范围可用下标1-下标2，或者下标1-表示屏蔽某一位及之后所有；多个规则之间可以用,分割，或者用数组形式传递。例如：4-7,9,11-表示第4，5，6，7，9，11以及11之后的位使用加密字符替换
+		- clear : 明文规则，使用方式痛cipher，结果相反
+		- symbol : 加密字符，默认*
+		- reverse : 规则反转，指定cipher/clear时无效。
+
+##### convert
+封装了一些自定义的参数转换，可以通过 `hzero.date.converter.enable`配置关闭或开启这些转换器，默认开启。
+
+**Date** <br />
+- 功能说明 : 按照用户设置的时区对时间做反序列化，固定格式`yyyy-MM-dd HH:mm:ss`
+
+- 使用说明 : 需要使用`java.util.Date`
+
+**LocalDate** <br />
+- 功能说明 : Java8日期类型，仅包含年月日，固定格式`yyyy-MM-dd`
+- 使用说明 : 需要使用`java.time.LocalDate`
+
+
+### 通用开发组件
+#### HZERO 父组件
+组件编码 `hzero-parent`
+
+##### 简介
+**概述** <br />
+HZERO产品平台开发项目的Parent组件，所有平台服务、组件项目的父级依赖项目，提供统一的三方应用版本。
+
+**组件坐标** <br />
+```
+<parent>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-parent</artifactId>
+    <version>${hzero.starter.version}</version>
+</parent>
+```
+
+**特性** <br />
+- 通过抽象HZero平台项目的Parent，提供统一的 GroupId
+- hzero-parent 父 POM spring-boot-starter-parent-2.0.6.RELEASE，因此项目中使用的 Spring boot 版本为 2.0.6.RELEASE
+- 管理通用依赖，统一管理版本，便于后续升级维护，如 SpringBoot、SpringCloud、Choerodon、commons、hzero-starters 等
+- 通过版本号 hzero.service.version 统一升级所有服务
+- 打包时如果需要跳过spring-boot-maven-plugin插件，使用参数-Dmaven.springboot.skip=true
+- 打包时如果需要跳过maven-source-plugin，使用参数-Dmaven.javadoc.skip=true
+
+**使用** <br />
+在POM中依赖 hzero-parent
+
+```
+<parent>
+    <groupId>org.hzero</groupId>
+    <artifactId>hzero-parent</artifactId>
+    <version>版本号</version>
+</parent>
+<groupId>org.demo</groupId>
+<artifactId>demo-name</artifactId>
+```
+
+#### Apollo客户端组件
+组件编码 `hzero-starter-apollo-config`
+
+>替换步骤简介:
+>去除hzero默认的配置中心hzero-config
+>加入apollo-config相关依赖
+>加入apollo-config相关配置
+
+**依赖** <br />
+```
+<dependency>
+    <groupId>org.hzero.starter</groupId>
+    <artifactId>hzero-starter-apollo-config</artifactId>
+</dependency>
+```
+
+**配置** <br />
+- 在资源根路径下/META-INF文件夹下存在app.properties文件，并指定appId。
+```
+appId=hzero-gateway
+```
+
+- 由于apollo能支持加载bootstrap配置前的配置，所以需要这样去指定：
+	- 【开发应用时】idea界面，在运行按钮左侧处编辑运行配置，在VM Options一栏填入-Denv=dev -Dapollo.meta=http://localhost:8080
+	- 【部署应用时】在java -jar app.jar -Denv=dev -Dapollo.meta=http://localhost:8080
+
+- 在引导程序上开启apollo配置，并指定namespaces等配置
+```
+@EnableHzeroApolloConfig({
+        "application",
+        "application2"
+})
+```
+关于@EnableHzeroApolloConfig的使用，与@EnableApolloConfig使用方式完全一致。
+
+为了便于hzero对apollo-client的增强，所以使用了新的注解@EnableHzeroApolloConfig代替原生的@EnableApolloConfig。
+
+- 在bootstrap.yml文件中可以增加如下配置：
+```
+spring:
+  cloud:
+    apollo:
+      config:
+        # 默认开启
+        enable: true
+        # 监听配置, 可以筛选监听key
+        listener:
+          interestedKeys: com.xcxcxcxcx.name
+          interestedKeyPrefixes: zuul.
+```
+
+这两条配置表示对apollo监听的配置的筛选，如：
+
+interestedKeyPrefixes=zuul.表示仅监听key为“zuul.”开头的配置
+
+interestedKeys=com.xcxcxcxcx.name表示仅监听key为“com.xcxcxcxcx.name”的配置
+
+#### MyBatis 增强组件
+`组件编码 hzero-starter-mybatis-mapper`
+
+##### 简介
+**概述** <br />
+增强ORM框架Mybatis的数据库DML处理能力，支持分页、数据多语言、基于对象的SQL编写，数据防篡改等功能。
+
+**组件坐标** <br />
+```
+<dependency>
+    <groupId>org.hzero.starter</groupId>
+    <artifactId>hzero-boot-starter-mybatis-mapper</artifactId>
+    <version>${hzero.starter.version}</version>
+</dependency>
+
+```
+
+**特性** <br />
+- 基于猪齿鱼choerodon-starter-mybatis-mapper组件拓展
+- 支持复杂条件查询
+- 扩展多语言支持
+- 添加数据防篡改功能
+- 添加数据加密存储功能
+- 添加唯一校验功能
+
+##### 组件功能
+**CRUD支持** <br />
+新增支持
+- int insert(T record) : 插入一条记录
+- int insertSelective(T record) ： 插入一条记录，Bean中null的字段不会被插入
+- int insertOptional(T record) : 插入一条记录，指定插入的列，插入前调用io.choerodon.mybatis.helper.OptionalHelper#optional(java.util.List<java.lang.String>)方法
+- int insertList(List<T> recordList) : 批量插入，如果主键名称不叫id，需要再mapper中重新覆写该方法，在注解中声明主键的名称。
+```
+@Options(useGeneratedKeys = true, keyProperty = "主键名称")
+@InsertProvider(type = SpecialProvider.class, method = "dynamicSql")
+int insertList(List<T> recordList);
+```
+
+更新支持
+- int updateByPrimaryKey(T record) : 根据主键更新实体全部字段，null值会被更新
+- int updateByPrimaryKeySelective(T record) ： 根据主键更新属性不为null的值
+- int updateOptional(T record) : 更新一条记录，指定更新的列，更新前调用io.choerodon.mybatis.helper.OptionalHelper#optional(java.util.List<java.lang.String>)方法
+
+删除支持
+- int delete(T record) : 根据实体属性作为条件进行删除，查询条件使用等号
+- int deleteByPrimaryKey(Object key) ： 根据主键字段进行删除，方法参数必须包含完整的主键属性
+
+查询支持
+- List<T> select(T record) : 根据实体中的属性值进行查询，查询条件使用等号
+- List<T> selectAll() : 查询全表结果，慎用
+T selectByPrimaryKey(Object key) : 根据主键字段进行查询，方法参数必须包含完整的主键属性，查询条件使用等号
+- List<T> selectByIds(String ids) : 根据主键字符串进行查询，类中只有存在一个带有@Id注解的字段，多个主键使用,分割
+- int selectCount(T record) : 根据实体中的属性查询总数，查询条件使用等号
+- T selectOne(T record) : 根据实体中的属性进行查询，只能有一个返回值，有多个结果是抛出异常，查询条件使用等号
+- List<T> selectByCondition(Object condition) : 根据Condition条件进行查询
+- int selectCountByCondition(Object condition) : 根据Condition条件进行查询总数
+
+```
+mapper.selectByCondition(
+    org.hzero.mybatis.domian.Condition.builder(Entity.class)
+    .andWhere(
+        org.hzero.mybatis.util.Sqls.custom()
+            .andEnqualTo(FIELD1, VALUE1)
+            .andLike(FIELD2, VALUE2)
+    ).build()
+);
+```
+
+- List<T> selectOptional(T condition, Criteria criteria)：复杂查询，condition参数是查询条件，criteria可以指定查询的列以及一些其他的查询参数，以及排序等。该方法支持多表关联查询，使用关联查询时需要在与其他表的关联字段上添加 `@org.hzero.mybatis.common.query.JoinTable`注解，该注解指定关联的表以及关联方式和关联字段，然后需要在Entity中新建关联表中的字段，并且添加`@org.hzero.mybatis.common.query.JoinColumn`注解，如果字段作为查询条件，必须添加`@Where`注解。
+
+```
+// Entity
+@Table(name = "hmsg_user_receive_config")
+class UserReceiveConfig extends AuditDomain {
+    // other field ...
+    @Where
+    private Long userId;
+    @ApiModelProperty(value = "hmsg_receive_config .receiver_code", required = true)
+    @JoinTable(name = "receiveConfigJoin", target = ReceiveConfig.class, on = @JoinOn(joinField = ReceiveConfig.FIELD_RECEIVE_CODE))
+    private String receiveCode;
+    @Transient
+    @JoinColumn(joinName = "receiveConfigJoin", field = ReceiveConfig.FIELD_DEFAULT_RECEIVE_TYPE)
+    private String defaultReceiveType;
+    // getter and setter ...
+}
+
+// Entity
+@Table(name = "hmsg_receive_config")
+class ReceiveConfig extends AuditDomain {
+    // other field ...
+    private String receiveCode;
+    private String defaultReceiveType;
+    // getter and setter ...
+}
+
+// Repository
+userReceiveConfigRepository
+    .selectOptional(new UserReceiveConfig().setUserId(1L), 
+            new Criteria().select("userReceiveId", "receiveCode", "receiveType", "defaultReceiveType", "userId"));
+```
+---
+
+```
+-- Result SQL
+SELECT 
+    A.object_version_number, 
+    A.user_receive_id, 
+    A.receive_code, 
+    A.receive_type, 
+    B.default_receive_type AS default_receive_type, 
+    A.user_id 
+FROM 
+    hmsg_user_receive_config A 
+    INNER JOIN hmsg_receive_config B 
+        ON A.receive_code = B.receive_code 
+WHERE 
+    (A.user_id = ?) 
+```
+
+
+**多语言支持** <br />
+**** <br />
+
+### 服务客户端组件
+
 **** <br />
 **** <br />
+
+
+**** <br />
+**** <br />
+**** <br />
+**** <br />
+
 
 ## HZERUI
 
