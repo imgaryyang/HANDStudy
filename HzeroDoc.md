@@ -6013,6 +6013,32 @@ WHERE
 
 
 **多语言支持** <br />
+- 功能说明
+	- 在业务处理中，经常会有有一些数据需要做多语言支持，根据用户选择的语言来动态切换显示内容。使用多语言组件时，提供的查询方法会自动join多语言表，不必开发人员再去手写SQL，自己创建的mapper接口需要自行join多语言表。
+
+- 使用说明
+	- 创建表时创建对应的多语言表，多语言表的表明需要在原表明的基础上增加_tl，多语言表中需要包含对应表的主键，以及需要多语言的列，再加上lang varchar(30)字段。
+	- 在数据库对应的多语言java实体类上继承io.choerodon.mybatis.domain.AuditDomain类，添加@io.choerodon.mybatis.annotation.MultiLanguage注解，在对应的多语言列上添加@io.choerodon.mybatis.annotation.MultiLanguageField注解
+	- 新增/更新数据时，实体类json中需要添加多语言map，结构示例：
+
+```
+{
+    // other field ...
+    _tls:{
+    roleName : {
+        zh_CN : '管理员',
+        en_GB : 'Admin'
+    },
+    description : {
+        zh_CN : '管理员',
+        en_GB : 'administrator'
+    }
+}
+}
+```
+
+- 如果因为一些特殊需求，需要在新增或者删除时关闭多语言支持，可以调用org.hzero.mybatis.helper.MultiLanguageHelper#close方法临时关闭多语言支持，在一次mybatis操作之后，恢复启用状态，只在当前线程内生效。
+
 **** <br />
 
 ### 服务客户端组件
