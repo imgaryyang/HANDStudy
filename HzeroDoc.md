@@ -6037,13 +6037,167 @@ WHERE
 }
 ```
 
-- 如果因为一些特殊需求，需要在新增或者删除时关闭多语言支持，可以调用org.hzero.mybatis.helper.MultiLanguageHelper#close方法临时关闭多语言支持，在一次mybatis操作之后，恢复启用状态，只在当前线程内生效。
+- 如果因为一些特殊需求，`需要在新增或者删除时关闭多语言支持，可以调用org.hzero.mybatis.helper.MultiLanguageHelper#close方法临时关闭多语言支持，在一次mybatis操作之后，恢复启用状态，只在当前线程内生效`。
 
-**** <br />
+
+- 自行创建的mapper方法，在关联多语言时，可以在xml中添加 `<bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>` 标签来获取当前用户的语言。
+
+```
+<select id="selectEntity" resultType="c.x.Entity">
+    <bind name="lang" value="@io.choerodon.mybatis.helper.LanguageHelper@language()"/>
+    SELECT
+        t.id,
+        ttl.multi_lang
+        -- other column ..
+    FROM table1 t
+        JOIN table1_tl ttl ON t.id = ttl.id AND ttl.lang = #{lang}
+    WHERE
+        -- condition
+</select>
+```
+
+**数据防篡改** <br />
+- 功能说明
+```
+数据从后端传输到前端之后，在进行更新操作时，经常需要对主键字段做校验，防止恶意篡改主键导致后端数据被破坏，数据防篡改功能将数据主键进行加密，进行数据更新时，对加密信息做校验用来验证主键信息有没有被篡改。多语言支持也是基于数据防篡改实现的。
+```
+
+- 使用说明
+```
+如果是和数据库对应的实体类，只需要继承io.choerodon.mybatis.domain.AuditDomain即可，如果是自定义的VO/DTO，也可以继承AuditDomain类，或者实现 org.hzero.mybatis.domian.SecurityToken接口，接口中的set_token方法用于往VO/DTO中保存加密信息，get_token方法用于获取VO/DTO中保存的加密信息，associateEntityClass方法用于将VO/DTO与数据库对应的实体类关联在一起，需要注意在VO/DTO中必须和实体类主键属性。
+```
+
+在更新数据前调用org.hzero.mybatis.helper.SecurityTokenHelper#validToken(..)方法校验主键有没有被篡改。
+
+```
+class Entity extends io.choerodon.mybatis.domain.AuditDomain {
+    @Id
+    private long id;
+    // other field ...
+    // getter and setter ...
+}
+
+class EntityDTO implements org.hzero.mybatis.domian.SecurityToken {
+    private long id;
+    // other field ...
+    // getter and setter ...
+    private String _token;
+    @Override
+    public void set_token(String _token) {
+        this._token = _token;
+    }
+    @Override
+    public String get_token() {
+        return this._token;
+    }
+    @Override
+    public Class<? extends SecurityToken> associateEntityClass() {
+        return Entity.class;
+    }
+}
+
+// controller
+// GET
+public ResponseEntity<List<EntityDTO>> selectEntity(...){
+    List<EntityDTO> list = // select ...
+    return Results.success(list)
+}
+// PUT
+public ResponseEntity<Entity> updateEntity(Entity entity){
+    org.hzero.mybatis.helper.SecurityTokenHelper.validToken(entity);
+    // update ...
+}
+```
+
+
+**数据加密存储** <br />
+- 功能说明
+有一些保密新比较强的信息需要加密之后保存到数据库，例如配置的用户的邮箱密码，某些其他服务的密钥等，在数据库做加密存储主要是防止数据库信息被盗取导致用户信息泄露。
+
+-  使用说明
+	- 在数据库对应的实体类只需要加密的字段上添加`@org.hzero.mybatis.annotation.DataSecurity`注解。
+
+	- 在新增/更新数据之前，调用`org.hzero.mybatis.helper.DataSecurityHelper#open`方法开启数据加密
+
+	- 在查询数据之前，调用`org.hzero.mybatis.helper.DataSecurityHelper#open`方法
+
+	- 加密使用AES加密
+
+**租户条件过滤** <br />
+- 功能说明
+为了防止Saas模式下的租户功能越权（查询到不属于自己租户的数据），在没有租户参数进行数据过滤控制的情况下，增加了后端通用过滤规则。
+
+- 使用说明
+1.注解模式，此模式针对使用平台封装好的查询方法生效。
+
+1.1 在Controller类方法上添加注解@org.hzero.mybatis.annotation.TenantLimitedRequest注解，默认SQL拼装为IN模式，如：
+
+```
+WHERE 1 = 1
+  AND tenant_id IN (可访问租户ID列表)
+```
+
+1.2 设置注解属性TenantLimitedRequest(equal=true)，SQL拼装为=模式，如：
+```
+WHERE 1 = 1
+  AND tenant_id = (当前租户ID)
+
+```
+
+针对自定义Mapper的SQL语句，注解方式不支持自动改写，需要在Mapper中使用bind的方式进行引用
+
+
+获取可访问租户列表函数，示例：
+```
+<bind name="__tenantIds" value="@org.hzero.mybatis.helper.TenantLimitedHelper@tenantIds()" />
+```
+
+引入后，在使用到的地方进行使用，如：
+```
+<if test="__tenantIds != null and !__tenantIds.isEmpty()">
+  and tenant_id in 
+  <foreach colletion="__tenantIds" item="__tenantId" separator="," open="(" close=")">
+    #{__tenantId}
+  </foreach>
+</if>
+```
+
+
+获取当前租户函数，示例：
+```
+<bind name="__tenantId" value="@org.hzero.mybatis.helper.TenantLimitedHelper@tenantId()" />
+```
+
+引入后，在使用到的地方进行使用，如：
+```
+<if test="__tenantId != null">
+  and tenant_id = #{__tenantId}
+</if>
+```
+
+
+
+**数据唯一校验** <br />
+- 功能说明
+在开发过程中，经常需要到传到后端的数据在数据库中做唯一校验，该功能是对该需求的封装，旨在简化开发过程中重复的工作，降低开发量。
+
+
+- 声明说明
+声明唯一校验字段：在Entity需要校验唯一的字段上添加注解@org.hzero.mybatis.annotation.Unique
+
+调用校验方法：org.hzero.mybatis.helper.UniqueHelper#valid(T)方法，该方法返回一个布尔值，如果返回true表示校验通过，返回false表示数据已存在。
+
+```
+Assert.isTrue(UniqueHelper.valid(bank), BaseConstants.ErrorCode.DATA_EXISTS);
+```
+
+添加复杂查询selectOptional
+
+
 
 ### 服务客户端组件
 
-**** <br />
+
 **** <br />
 
 
