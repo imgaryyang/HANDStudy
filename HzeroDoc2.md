@@ -410,6 +410,15 @@ nodegroup:{serviceName}:{tenantId}:url-node
 **组件核心思想** <br />
 - 网关层URL客制化：
 	- 通过 ZuulPathFilter 拦截所有请求，获取当前租户ID和用户ID，并放入线程变量中。ZuulPathFilter 继承自 ZuulFilter。
+	- MemoryRouteLocator 重写路由定位器获取匹配路由的方法，获取到匹配的路由 Route 后，根据服务名、租户ID、URL获取客制化的URL编码前缀，并改写 Route 的 path。 MemoryRouteLocator 继承自 SimpleRouteLocator。
+
+- 服务间 feign 调用URL客制化：
+	- 通过 TenantHeaderInterceptor 拦截所有服务请求，获取当前租户ID和用户ID，并放入线程变量中。TenantHeaderInterceptor 继承自 HandlerInterceptorAdapter。
+	- 使用AOP FeignClientAspect 拦截所有 infra.feign 包下的被 @FeignClient 注解的接口，缓存 feign 调用的服务名称。
+	- 通过 FeignRouteInterceptor 拦截器修改 RequestTemplate，根据服务名、租户ID、URL获取客制化的URL编码前缀，向 RequestTemplate 插入URL编码前缀。FeignRouteInterceptor 继承自 RequestInterceptor。
+
+- 3.3 节点定位：
+	- 核心思想是通过修改 Ribbon 选择节点的方法，因为不论是网关层、还是 feign 调用、还是使用 LoadBalanced 标注的 RestTemplate，最终都会通过 Ribbon 来从注册中心选择一个节点进行服务请求。
 **** <br />
 **** <br />
 **** <br />
@@ -418,3 +427,4 @@ nodegroup:{serviceName}:{tenantId}:url-node
 **** <br />
 **** <br />
 **** <br />
+
