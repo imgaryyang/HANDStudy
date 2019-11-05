@@ -747,7 +747,79 @@ keys：自定义业务Key，针对参数为对象，可使用此种方式进行�
 
 value：默认值
 ```
-**** <br />
-**** <br />
-**** <br />
 
+#### 长连接组件
+`组件编码 hzero-starter-websocket`
+
+##### 简介
+**概述** <br/>
+hzero-starter-websocket 长连接组件，支持前端websocket和sock-js两种连接方式，用于后端的主动消息推送。
+
+**组件坐标** <br/>
+```
+<dependency>
+    <groupId>org.hzero.starter</groupId>
+    <artifactId>hzero-starter-websocket</artifactId>
+    <version>${hzero.starter.version}</version>
+</dependency>
+```
+
+** 特性** <br />
+- 支持ws和http协议
+- 包含在线用户记录
+- 支持自定义连接路径
+
+##### 使用指南
+**配置** <br />
+```
+hzero:
+  websocket:
+    # websocket方式连接路径
+    websocket: /websocket
+    # sock-js连接路径
+    sockJs: /sock-js
+    # oauth地址
+    oauthUrl： http://dev.hzero.org:8080/oauth/api/user
+    # redis库
+    redisDb： 1
+```
+>以上均为默认配置
+
+**前端连接** <br/>
+前端连接需要在路径上拼接参数access_token，用于获取用户信息
+**使用说明** <br />
+后端发送消息
+```
+@Autowired
+private SocketSendHelper socketSendHelper;
+```
+
+SocketSendHelper提供了三个消息发送的方法：
+- sendBySession(String sessionId, String key, String message);
+	- 根据长连接的sessionId发送消息
+
+- sendByUserId(Long userId, String key, String message);
+	- 根据用户Id发送消息
+
+- sendToAll(String key, String message);
+	- 向所有在线人员发送消息
+
+
+>**需要注意的是：**HZERO的长连接是默认建立的，连接服务为消息服务，在HZERO的系统架构下，无需自行依赖本组件。boot-message组件提供了上述三个方法用于消息推送。
+
+key为消息的类型key，用于标识业务，HZERO的前端会根据key进行消息下发，所以key必须是唯一的。message为消息内容，一般为json字符串。
+
+
+**在线用户记录** <br/>
+```
+@Autowired
+private OnlineUserHelper userHelper;
+
+```
+
+- List<UserVO> getUser();
+获取所有在线用户信息
+- List<UserVO> getUser(Long userId)；
+指定用户Id，获取在线用户信息
+
+boot-message组件也提供了上述方法。
