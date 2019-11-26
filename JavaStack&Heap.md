@@ -82,4 +82,203 @@ String str2 =new String ("abc");
 System.out.println(str1==str2);
 ```
 
-因此用第二种方式创建多个 "abc" 字符串，在内存中  其实只存在一个对象
+因此用第二种方式创建多个 "abc" 字符串，在内存中  其实只存在一个对象而已。这种写法有利于节省内存空间。同时它可以在一定程序上提高程序的运行速度，因为JVM 会自动根据栈中数据的实际情况来决定是否有必要创建新对象。而对于String str = new String("abc") ;  的代码，则一概在堆中创建新对象，而不管其字符串值是否相等，是否有必要创建新对象，从而加重了程序的负担。
+
+
+另 一方面, 要注意: 我们在使用诸如String str = "abc"；的格式定义类时，总是想当然地认为，创建了String类的对象str。担心陷阱！对象可能并没有被创建！而可能只是指向一个先前已经创建的 对象。只有通过new()方法才能保证每次都创建一个新的对象。  由于String类的immutable性质，当String变量需要经常变换 其值时，应该考虑使用StringBuffer类，以提高程序效率。
+
+- 1.首先String不属于8种基本数据类型，String是一个对象。因为对象的默认值是null，所以String的默认值也是null；但它又是一种特殊的对象，有其它对象没有的一些特性。
+- 2.new String()和new String(”")都是申明一个新的空字符串，是空串不是null；
+- 3.String str=”kvill”；String str=new String (”kvill”)的区别
+
+```
+String s0="kvill";
+String s1="kvill";
+String s2="kv" + "ill";
+System.out.println( s0==s1 );//true
+System.out.println( s0==s2 );//true
+```
+
+>首先，我们知道结果为 Java 会确保一个字符串常量只有一个拷贝。
+
+因为例子中的 s0和s1中的”kvill”都是字符串常量，它们在编译期就被确定了，所以`s0==s1`为true；而”kv”和”ill”也都是字符串常量，当一个字 符串由多个字符串常量连接而成时，它自己肯定也是字符串常量，所以s2也同样在编译期就被解析为一个字符串常量，所以s2也是常量池中” kvill”的一个引用。所以我们得出`s0==s1==s2`；用new String() 创建的字符串不是常量，不能在编译期就确定，所以new String() 创建的字符串不放入常量池中,它们有自己的地址空间。
+
+`示例:`
+```
+String s0="kvill";
+String s1=new String("kvill");
+String s2="kv" + new String("ill");
+System.out.println( s0==s1 );
+System.out.println( s0==s2 );
+System.out.println( s1==s2 );   
+
+结果为：
+false  false  false
+```
+
+>s0还是常量池 中"kvill”的应用，s1因为无法在编译期确定，所以是运行时创建的新对象”kvill”的引用，s2因为有后半部分 new String(”ill”)所以也无法在编译期确定，所以也是一个新创建对象”kvill”的应用;明白了这些也就知道为何得出此结果了。
+
+
+- 4.String.intern()：
+存在于.class文件中的常量池，在运行期被JVM装载，并且可以扩充。String的 intern()方法就是扩充常量池的 一个方法；当一个String实例str调用intern()方法时，Java 查找常量池中 是否有相同Unicode的字符串常量，如果有，则返回其的引用，如果没有，则在常 量池中增加一个Unicode等于str的字符串并返回它的引用
+
+
+```
+String s0= "kvill";
+String s1=new String("kvill");
+String s2=new String("kvill");
+System.out.println( s0==s1 );
+System.out.println( "**********" );
+s1.intern();
+s2=s2.intern(); //把常量池中"kvill"的引用赋给s2
+System.out.println( s0==s1);
+System.out.println( s0==s1.intern() );
+System.out.println( s0==s2 );   
+```
+
+`结果为:`
+false  false //虽然执行了s1.intern(),但它的返回值没有赋给s1  true //说明s1.intern()返回的是常量池中"kvill"的引用  true
+
+
+有人说，“使用 String.intern() 方法则可以将一个 String 类的保存到一个全局 String 表中 ，如果具有相同值的 Unicode 字符串已经在这个表中，那么该方法返回表中已有字符串的地址，如果在表中没有相同值的字符串，则将自己的地址注册到表中”如果我把他说的这个全局的 String 表理解为常量池的话，他的最后一句话，”如果在表中没有相同值的字符串，则将自己的地址注册到表中”是错的：
+
+`实例:`
+
+```
+String s1=new String("kvill");
+String s2=s1.intern();
+System.out.println( s1==s1.intern() );
+System.out.println( s1+" "+s2 );
+System.out.println( s2==s1.intern() );   
+
+
+结果：
+false  kvill kvill  true
+```
+
+
+在这个类中我们没有声明一个”kvill”常量，所以常量池中一开始是没有”kvill”的，当我们调用s1.intern()后就在常量池中新添加了一 个”kvill”常量，原来的不在常量池中的”kvill”仍然存在，也就不是“将自己的地址注册到常量池中”了。
+
+>`s1==s1.intern() `为false说明原来的”kvill”仍然存在; s2现在为常量池中”kvill”的地址，所以有s2==s1.intern()为true。
+
+
+- 5.关于equals()和== ：
+这个对于String 简单来说就是比较两个字符串的Unicode 序列是否相当，如果相等返回true；而 == 是比较两个字符串的地址是否相同，也就是是否是同一个字符串的引用。
+
+- 6.关于String是不可变的
+String str=”kv”+”ill”+” “+”ans”; 就是有4个字符串常量，首先”kv”和”ill”生成了”kvill”存在内存中，然后”kvill”又和” ” 生成 “kvill “存在内存中，最后又和生成了”kvill ans”;并把这个字符串的地址赋给了str,就是因为String的”不可变”产生了很多临时变量，这也就是为什么建议用StringBuffer的原 因了，因为StringBuffer是可改变的。
+
+
+String中的final用法和理解
+
+```
+final StringBuffer a = new StringBuffer("111"); final StringBuffer b = new StringBuffer("222"); a=b;//此句编译不通过 final StringBuffer a = new StringBuffer("111"); a.append("222");// 编译通过
+
+```
+>可见，final只对引用的"值"(即内存地址)有效，它迫使引用只能指向初始指向的那个对象，改变它的指向会导致编译期错误。至于它所指向的对象 的变化，final是不负责的.
+
+
+#### String常量池问题的几个例子
+```
+String a = "a1";
+String b = "a" + 1;
+System.out.println((a == b)); //result = true
+String a = "atrue";
+String b = "a" + "true";
+System.out.println((a == b)); //result = true
+String a = "a3.4";
+String b = "a" + 3.4;
+System.out.println((a == b)); //result = true
+```
+
+>分析：JVM对于字符串常量的"+"号连接，将程序编译期，JVM就将常量字符串的"+"连接优化为连接后的值，拿"a" + 1来说，经编译器优化后在class中就已经是a1。在编译期其字符串常量的值就确定下来，故上面程序最终的结果都为true。
+
+
+---
+```
+String a = "ab";
+String bb = "b";
+String b = "a" + bb;
+System.out.println((a == b)); //result = false 
+```
+>分析：JVM对于字符串引用，由于在字符串的"+"连接中，有字符串引用存在，而引用的值在程序编译期是无法确定的，即"a" + bb无法被编译器优化，只有在程序运行期来动态分配并将连接后的新地址赋给b。所以上面程序的结果也就为false。
+
+
+---
+```
+String a = "ab";
+final String bb = "b";
+String b = "a" + bb;
+System.out.println((a == b)); //result = true
+```
+> 分析：和[3]中唯一不同的是bb字符串加了final修饰，对于final修饰的变量，它在编译时被解析为常量值的一个本地拷贝存储到自己的常量 池中或嵌入到它的字节码流中。所以此时的"a" + bb和"a" + "b"效果是一样的。故上面程序的结果为true。
+
+
+
+---
+
+```
+String a = "ab";
+final String bb = getBB();
+String b = "a" + bb;
+System.out.println((a == b)); //result = false
+private static String getBB() {  return "b";   }
+```
+>分析：JVM对于字符串引用bb，它的值在编译期无法确定，只有在程序运行期调用方法后，将方法的返回值和"a"来动态连接并分配地址为b，故上面 程序的结果为false。
+
+>通过上面4个例子可以得出得知：String  s  =  "a" + "b" + "c"; 就等价于String s = "abc";
+
+```
+String a = "a";   
+String b = "b";    
+String c = "c";    
+String s = a + b + c;
+```
+
+这个就不一样了，最终结果等于：
+```java
+StringBuffer temp = new StringBuffer();
+temp.append(a).append(b).append(c);
+String s = temp.toString();
+```
+
+>由上面的分析结果，可就不难推断出String 采用连接运算符（+）效率低下原因分析，形如这样的代码：
+```java
+public class Test {   
+	public static void main(String args[]) {   
+		String s = null;   
+		for(int i = 0; i < 100; i++) {   
+			s += "a";   
+		}   
+	}   
+}  
+```
+
+每做一次 + 就产生个StringBuilder对象，然后append后就扔掉。下次循环再到达时重新产生个StringBuilder对象，然后 append 字符串，如此循环直至结束。如果我们直接采用 StringBuilder 对象进行 append 的话，我们可以节省 N - 1 次创建和销毁对象的时间。所以对于在循环中要进行字符串连接的应用，一般都是用StringBuffer或StringBulider对象来进行 append操作
+
+
+String对象的intern方法理解和分析：
+```
+public class Test4 {
+	private static String a = "ab";   
+	public static void main(String[] args){  
+		String s1 = "a";  
+		String s2 = "b";  
+		String s = s1 + s2;  
+		System.out.println(s == a);//false  
+		System.out.println(s.intern() == a);//true    
+} 
+```
+>这里用到Java里面是一个常量池的问题。对于s1+s2操作，其实是在堆里面重新创建了一个新的对象,s保存的是这个新对象在堆空间的的内容，所 以s与a的值是不相等的。而当调用s.intern()方法，却可以返回s在常量池中的地址值，因为a的值存储在常量池中，故s.intern和a的值相等。
+
+
+
+
+### 总结
+栈中用来存放一些原始数据类型的局部变量数据和对象的引用(String,数组.对象等等)但不存放对象内容
+
+
+
+堆中存放使用new关键字创建的对象.
+
+字符串是一个特殊包装类,其引用是存放在栈里的,而对象内容必须根据创建方式不同定(常量池和堆).有的是编译期就已经创建好，存放在字符串常 量池中，而有的是运行时才被创建.使用new关键字，存放在堆中。
