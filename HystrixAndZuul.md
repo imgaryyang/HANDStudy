@@ -85,7 +85,7 @@ Hystrix为每个依赖服务调用分配一个小的线程池，如果线程池�
 
 #### 1.3.2.1.引入依赖
 
-首先在itcast-service-consumer的pom.xml中引入Hystrix依赖：
+首先在legend-service-consumer的pom.xml中引入Hystrix依赖：
 
 ```xml
 <dependency>
@@ -337,7 +337,7 @@ Feign可以把Rest的请求进行隐藏，伪装成类似SpringMVC的Controller�
 
 ## 2.2.快速入门
 
-改造itcast-service-consumer工程
+改造legend-service-consumer工程
 
 ### 2.2.1.导入依赖
 
@@ -438,7 +438,7 @@ Feign默认也有对Hystrix的集成：
 
 ![](https://img2018.cnblogs.com/blog/1231979/201910/1231979-20191030183537921-1065754573.png)
 
-只不过，默认情况下是关闭的。我们需要通过下面的参数来开启：(在itcast-service-consumer工程添加配置内容)
+只不过，默认情况下是关闭的。我们需要通过下面的参数来开启：(在legend-service-consumer工程添加配置内容)
 
 ```yaml
 feign:
@@ -520,7 +520,7 @@ feign:
 ```yaml
 logging:
   level:
-    cn.itcast: debug
+    com.legend: debug
 ```
 
 2）编写配置类，定义日志级别
@@ -716,7 +716,7 @@ zuul:
 
 在刚才的路由规则中，我们把路径对应的服务地址写死了！如果同一服务有多个实例的话，这样做显然就不合理了。我们应该根据服务的名称，去Eureka注册中心查找 服务对应的所有实例列表，然后进行动态路由才对！
 
-对itcast-zuul工程修改优化：
+对legend-zuul工程修改优化：
 
 ### 3.4.1.添加Eureka客户端依赖
 
