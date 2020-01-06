@@ -1,5 +1,10 @@
 package com.legend.enums;
 
+/**
+ * 状态枚举第二种写法
+ *
+ * @author legend
+ */
 public enum StatusEnum {
 
     OPEN("OPEN"),

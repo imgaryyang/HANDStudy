@@ -32,4 +32,12 @@ public class Type {
         this.id = id;
         this.name = name;
     }
+
+    @Override
+    public String toString() {
+        return "Type{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

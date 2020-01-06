@@ -2,8 +2,41 @@ package com.legend.test;
 
 import com.legend.enums.StatusEnum;
 
-public class TestDemo4 {
+/**
+ * Switch case的使用  6种类型
+ * 基本数据类型
+ * 枚举类型
+ * 包装数据类型
+ *
+ * @author legend
+ */
+public class SwitchCaseDemo {
 
+    /**
+     * 语法格式
+     */
+    public static void test0() {
+        /*switch (expression) {
+            case value:
+                //语句
+                break;//可选
+            case value:
+                //语句
+                break;//可选
+
+            //你可以有任意数量的case语句
+
+            default://可选
+                //语句
+        }*/
+    }
+
+    /**
+     * expression为基本数据类型
+     * 常规写法
+     *
+     * @param value
+     */
     private static void test(int value) {
         switch (value) {
             case 1:
@@ -33,25 +66,35 @@ public class TestDemo4 {
     }
 
 
-    public void test2() {
-        /*switch (expression) {
-            case value:
-                //语句
-                break;//可选
-            case value:
-                //语句
-                break;//可选
-
-            //你可以有任意数量的case语句
-
-            default://可选
-                //语句
-        }*/
+    /**
+     * expression为基本数据类型
+     * 优化test1()
+     *
+     * @param value
+     */
+    private static void test2(int value) {
+        switch (value) {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+                System.out.println("1");
+                break;
+            case 6:
+            case 7:
+                System.out.println("0");
+                break;
+            default:
+                System.out.println("-1");
+        }
     }
 
 
+    /**
+     * expression为包装类型的switch case
+     */
     public void test3() {
-        //使用包装类型
         Integer value = 3;
         switch (value) {
             case 1:
@@ -69,9 +112,13 @@ public class TestDemo4 {
                 //语句
                 System.out.println("default");
         }
+    }
 
-
-        //使用枚举类型
+    /**
+     * expression为枚举类型的switch case
+     */
+    public static void test4() {
+        //枚举
         StatusEnum status = StatusEnum.PROCESSING;
         switch (status) {
             case OPEN:
