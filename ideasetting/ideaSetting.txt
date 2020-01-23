@@ -1,0 +1,1 @@
+-javaagent:/home/legend/develop/idea-IU-183.6156.11/bin/JetbrainsIdesCrack-4.2-release.jar
