@@ -1,1 +1,3 @@
 -javaagent:/home/legend/develop/idea-IU-183.6156.11/bin/JetbrainsIdesCrack-4.2-release.jar
+
+https://blog.csdn.net/qq_41890694/article/details/88651723
