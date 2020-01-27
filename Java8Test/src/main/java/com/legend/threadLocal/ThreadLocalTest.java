@@ -20,9 +20,14 @@ public class ThreadLocalTest {
 
 
     public static void main(String[] args) {
-
+        //ThreadLocal测试2,避免参数传递的麻烦
+        threadLocalDemo();
+        //ThreadLocal测试
+        //threadLocalMethod();
+        //synchronized同步方法解决线程安全的问题
+        //synchronizedTest();
         //一千个线程打印日期,用线程池来执行,出现线程安全问题
-        printOneThousandThreadForPool();
+        //printOneThousandThreadForPool();
         //一千个线程打印日期 用线程池来执行
         //printOneThousandThread();
         //三十个线程打印日期
@@ -30,6 +35,118 @@ public class ThreadLocalTest {
         //两个线程打印日期
         //printTwoThread();
     }
+
+    private static void threadLocalDemo(){
+        new Service1().process();
+    }
+
+
+    static class Service1 {
+        public static void process() {
+            User user = new User("legend鲁毅");
+            //将User对象存储到 holder 中
+            UserContextHolder.holder.set(user);
+            new Service2().process();
+        }
+    }
+
+    static class Service2 {
+        public void process() {
+            User user = UserContextHolder.holder.get();
+            System.out.println("Service2拿到用户名: " + user.name);
+            new Service3().process();
+        }
+    }
+
+
+    static class Service3 {
+        public void process() {
+            User user = UserContextHolder.holder.get();
+            System.out.println("Service3拿到用户名: " + user.name);
+        }
+    }
+
+    static class UserContextHolder {
+        public static ThreadLocal<User> holder = new ThreadLocal<>();
+    }
+
+    static class User {
+        String name;
+        public User(String name) {
+            this.name = name;
+        }
+    }
+
+
+    /**
+     * 利用 ThreadLocal 给每个线程分配自己的 dateFormat 对象
+     * 不但保证了线程安全，还高效的利用了内存
+     */
+    public static void threadLocalMethod() {
+        for (int i = 0; i < 1000; i++) {
+            int finalI = i;
+            //提交任务
+            THREADPOOL.submit(new Runnable() {
+                @Override
+                public void run() {
+                    String date = new ThreadLocalTest().date4(finalI);
+                    System.out.println(date);
+                }
+            });
+        }
+        THREADPOOL.shutdown();
+    }
+
+    public String date4(int seconds) {
+
+        //参数的单位是毫秒，从1970.1.1 00:00:00 GMT 开始计时
+        Date date = new Date(1000 * seconds);
+        //获取 SimpleDateFormat 对象
+        SimpleDateFormat dateFormat = ThreadSafeFormatter.dateFormatThreadLocal.get();
+        return dateFormat.format(date);
+    }
+
+    static class ThreadSafeFormatter {
+        public static ThreadLocal<SimpleDateFormat> dateFormatThreadLocal = new ThreadLocal<SimpleDateFormat>() {
+
+            //创建一份 SimpleDateFormat 对象
+            @Override
+            protected SimpleDateFormat initialValue() {
+                return new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+            }
+        };
+    }
+
+
+    /**
+     * synchronized同步方法解决线程安全的问题
+     */
+    public static void synchronizedTest() {
+        for (int i = 0; i < 1000; i++) {
+            int finalI = i;
+            //提交任务
+            THREADPOOL.submit(new Runnable() {
+                @Override
+                public void run() {
+                    String date = new ThreadLocalTest().date3(finalI);
+                    System.out.println(date);
+                }
+            });
+        }
+        THREADPOOL.shutdown();
+    }
+
+    public String date3(int seconds) {
+
+        //参数的单位是毫秒，从1970.1.1 00:00:00 GMT 开始计时
+        Date date = new Date(1000 * seconds);
+        String s;
+        synchronized (ThreadLocalTest.class) {
+            s = DATEFORMAT.format(date);
+        }
+        return s;
+    }
+
 
     /**
      * 1000个线程打印日期,用线程池来执行,出现线程安全问题

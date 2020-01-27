@@ -474,13 +474,91 @@ JDK的设计已经考虑到这个问题，所以在set()  、remove()  、resize
 #### 如何避免内存泄漏(阿里规约)
 调用remove()  方法就会删除对应的Entry 对象 可以避免内存泄漏，所以使用完ThreadLocal后,要调用remove()  方法
 
+```
+class Service1 {
+    public void process() {
+        User user = new User("legend");
+        //将User对象存储到 holder 中
+        UserContextHolder.holder.set(user);
+        new Service2().process();
+    }
+}
 
+class Service2 {
+
+    public void process() {
+        User user = UserContextHolder.holder.get();
+        System.out.println("Service2拿到用户名: " + user.name);
+        new Service3().process();
+    }
+}
+
+
+class Service3 {
+
+    public void process() {
+        User user = UserContextHolder.holder.get();
+        System.out.println("Service3拿到用户名: " + user.name);
+        //手动释放内存，从而避免内存泄漏
+        UserContextHolder.holder.remove();
+    }
+}
+```
 
 #### ThreadLocal 的空指针异常问题
 
 ```
+/**
+ * ThreadLocal的空指针异常问题
+ */
+public class ThreadLocalNPE {
 
+    ThreadLocal<Long> longThreadLocal = new ThreadLocal<>();
+
+    public void set() {
+        longThreadLocal.set(Thread.currentThread().getId());
+    }
+
+    public Long get() {
+        return longThreadLocal.get();
+    }
+
+    public static void main(String[] args) {
+
+        ThreadLocalNPE threadLocalNPE = new ThreadLocalNPE();
+
+        //如果get方法返回值为基本类型，则会报空指针异常，如果是包装类型就不会出错
+        System.out.println(threadLocalNPE.get());
+
+        Thread thread1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                threadLocalNPE.set();
+                System.out.println(threadLocalNPE.get());
+            }
+        });
+        thread1.start();
+    }
+}
 ```
 
+
+#### 空指针异常问题解决
+如果get方法返回值为基本类型，则会报空指针异常，如果是包装类型就不会出错。这是因为基本类型和包装类型存在装箱和拆箱的关系，造成空指针问题的原因在于使用者。
+
+
+#### 共享对象问题
+如果在每个线程中ThreadLocal.set()  进行的东西本来就是多个线程共享的同一个对象，比如static 对象，那么多个线程调用ThreadLocal.get()   获取的内容还是同一个对象，还是会发生线程安全问题。
+
+
+
+#### 可以不使用ThreadLocal 就不要强行使用
+如果在任务数很少的时候，在局部方法中创建对象就可以解决问题，这样就不需要使用ThreadLocal
+
+
+
+#### 优先使用框架的支持，而不是自己创造
+
+例如在Spring框架中，如果可以使用RequestContextHolder，那么就不需要自己维护ThreadLocal，因为自己可能会忘记调用remove()方法等，造成内存泄漏。
 
 
