@@ -41,3 +41,5 @@ define('ZBX_GRAPH_FONT_NAME',           'msyh'); // font file name
 
 然后刷新界面，就可以正常显示了。
 ![](https://img2018.cnblogs.com/blog/1231979/202002/1231979-20200209173353792-728351667.png)
+
+![](https://img2018.cnblogs.com/blog/1231979/202002/1231979-20200209173857916-1822294007.png)
