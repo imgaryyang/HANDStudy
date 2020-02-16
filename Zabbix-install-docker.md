@@ -1,7 +1,7 @@
 ## 安装Zabbix 分布式监控
 
-### 基于Docker容器安装Zabbix
-`使用Centos7安装docker容器`
+### Zabbix容器安装  (P8)
+`需要Centos7安装docker容器`
 
 #### 关闭本机防火墙
 ```
@@ -12,8 +12,7 @@ systemctl stop firewalld.service //暂时关闭防火墙服务器
 systemctl disable firewalld.service //永久禁止防火墙服务器
 ```
 
-
-#### 部分命令如下
+#### 安装docker
 ```
 yum install docker //安装docker
 
@@ -21,13 +20,17 @@ systemctl start docker //启动docker
 
 systemctl enable docker //开机启动docker
 
-docker version //查看docker版本
+systemctl status docker //查看docker的状态
 
 docker ps //查看正在运行的容器
 
 docker ps -a //查看历史容器启动
 
-docker pull nginx //拉取最新镜像
+docker run -d -p 80:80 httpd
+
+ps aux|grep httpd
+
+http://你的IP  访问
 ```
 
 ![](https://img2018.cnblogs.com/blog/1231979/202002/1231979-20200207120332396-1697851394.png)
@@ -42,20 +45,16 @@ docker pull nginx //拉取最新镜像
 ```
 ![](https://img2018.cnblogs.com/blog/1231979/202002/1231979-20200207120746210-862087839.png)
 
-```
-systemctl restart docker  //重启docker容器
-```
 
-
-#### 测试docker
+- 重启docker容器
 ```
-docker run hello-world
+systemctl restart docker
 ```
 
 
 #### 删除所有容器
 ```
- docker rm $(docker ps -a -q) // remove删除所有容器
+ docker rm $(docker ps -a -q)
 ```
 
 
@@ -67,22 +66,24 @@ docker run hello-world
 yum install -y httpd mariadb-server mariadb php php-mysql php-gd libjpeg* php-ldap php-odbc php-pear php-xml php-xmlrpc php-mhash
 ```
 
-
-服务端监听端口为10051，而被监控端即Zabbix-agents代理程序监控10050端口。
+>服务端监听端口为10051，而被监控端即Zabbix-agents代理程序监控10050端口。
 
 
 ##### 安装mysql 并启动Mysql命令(启动设置一些参数 通过 -e)
 ```
-docker run --name mysql-server -t -e MYSQL_DATABASE="zabbix" -e MYSQL_USER="zabbix" -e MYSQL_PASSWORD="zabbix@123" -e MYSQL_ROOT_PASSWORD="zabbix@123" -d mysql:5.7.27 --character-set-server=utf8 --collation-server=utf8_bin
+docker run --name mysql-server -t -e MYSQL_DATABASE="zabbix" -e MYSQL_USER="zabbix" -e MYSQL_PASSWORD="zabbix@123" -e MYSQL_ROOT_PASSWORD="zabbix@123" -d -p 3306:3306 mysql:5.7.27 --character-set-server=utf8 --collation-server=utf8_bin
 ```
 
-**如果需要开放外网端口则需要修改配置**
 
-- docker stop <容器id>   //停止运行中的容器
+**如果运行容器的时候忘记开放外网端口则需要修改配置**
+```
+docker stop <容器id>   //停止刚才运行的容器
 
-- vim /var/lib/docker/containers/[容器hash]/hostconfig.json，（有人提到，如果config.v2.json里面也记录了端口，也要修改）
+vim /var/lib/docker/containers/[容器hash]/hostconfig.json
+(有人提到，如果config.v2.json里面也记录了端口，也要修改)
+```
 
-修改PortBindings参数配置，宿主机8001端口映射容器80端口示例：
+- 修改PortBindings参数配置，宿主机8001端口映射容器80端口示例：
 
 ```
 "PortBindings":{"80/tcp":[{"HostIp":"","HostPort":"8001"}]},"
@@ -287,14 +288,14 @@ docker run --name mysql-server -t -e MYSQL_DATABASE="zabbix" -e MYSQL_USER="zabb
 }
 ```
 
-
 ![](https://img2018.cnblogs.com/blog/1231979/202002/1231979-20200207130452991-590403160.png)
 
 
+```
+systemctl restart docker  //重新启动docker容器
 
-- systemctl restart docker  //重新启动docker引擎
-
-- docker start <容器id>  //重新启动docker容器
+docker restart <容器id>  //重新启动docker容器
+```
 
 
 ##### 安装 zabbix-java-gateway 并启动
@@ -302,7 +303,6 @@ docker run --name mysql-server -t -e MYSQL_DATABASE="zabbix" -e MYSQL_USER="zabb
 ```
 docker run --name zabbix-java-gateway -t -d zabbix/zabbix-java-gateway:latest
 ```
-
 
 
 ##### 安装 zabbix-server-mysql
@@ -320,13 +320,13 @@ docker logs 容器ID
 
 ##### 安装 Zabbix-web-nginx-mysql
 ```
-docker run --name zabbix-web-nginx-mysql -t -e DB_SERVER_HOST="mysql-server" -e MYSQL_DATABASE="zabbix" -e MYSQL_USER="zabbix" -e MYSQL_PASSWORD="zabbix@123" -e MYSQL_ROOT_PASSWORD="zabbix@123" --link mysql-server:mysql --link zabbix-server-mysql:zabbix-server -p 80:80 -d zabbix/zabbix-web-nginx-mysql:latest
+docker run --name zabbix-web-nginx-mysql -t  -e PHP_TZ="Asia/Shanghai" -e DB_SERVER_HOST="mysql-server" -e MYSQL_DATABASE="zabbix" -e MYSQL_USER="zabbix" -e MYSQL_PASSWORD="zabbix@123" -e MYSQL_ROOT_PASSWORD="zabbix@123" --link mysql-server:mysql --link zabbix-server-mysql:zabbix-server -p 80:80 -d zabbix/zabbix-web-nginx-mysql:latest
 ```
 
 
 ##### 安装 Zabbix-agent
 ```
-docker run --name zabbix-agent -e ZBX_HOSTNAME="Zabbix server" -e ZBX_SERVER_HOST="zabbix-server-mysql" --link zabbix-server-mysql:zabbix-server -d zabbix/zabbix-agent:latest
+docker run --name zabbix-agent -e ZBX_HOSTNAME="Zabbix server" -e ZBX_SERVER_HOST="zabbix-server-mysql" --link zabbix-server-mysql:zabbix-server -d -p 10050:10050 zabbix/zabbix-agent:latest
 ```
 
 
@@ -338,18 +338,19 @@ ps -ef | grep php-fpm
 ```
 
 
-### 浏览器访问
+#### 浏览器访问Zabbix
 ![](https://img2018.cnblogs.com/blog/1231979/202002/1231979-20200207131955571-1578362739.png)
 
 ![](https://img2018.cnblogs.com/blog/1231979/202002/1231979-20200207115738834-450213347.png)
 
 
+---
 
 ### zabbix修改界面语言为中文
-- 登录zabbix的主界面，点击右上角的小头像图标，就可以进入到设置界面。
+#### 登录zabbix的主界面，点击右上角的小头像图标，就可以进入到设置界面。
 
 ![](https://img2018.cnblogs.com/blog/1231979/202002/1231979-20200207132626259-536155723.png)
 
-- 在设置界面可以看到，默认的界面语言就是english，点击旁边的下拉按钮，可以看到默认有中文语言，选择
+#### 在设置界面可以看到，默认的界面语言就是english，点击旁边的下拉按钮，可以看到默认有中文语言，选择
 
 ![](https://img2018.cnblogs.com/blog/1231979/202002/1231979-20200207132744536-2130191334.png)
